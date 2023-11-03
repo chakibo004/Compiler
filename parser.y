@@ -23,9 +23,8 @@
 %token <string> IDF <entier> const_int <reel> const_float <string> const_bool
 %token VIRGULE 
 %token PLUS SUB MUL DIV INCREM DECREM
-%token SUP SUPEGAL INF INFEGAL DIFF EGAL DPAFF
+%token SUP SUPEGAL INF INFEGAL DIFF EGAL DPAFF IF ELSE
 %token FOR PARG PARD CrochetG CrochetD
-
 %start program
 
 %%
@@ -33,6 +32,7 @@
 program : Liste_declarations BEG Liste_instructions END {
   printf("Programme valide\n");
 }
+
 
 OPP : PLUS|SUB|MUL|DIV
 OppCond : SUP|SUPEGAL|INF|INFEGAL|DIFF|EGAL
@@ -72,11 +72,11 @@ Expression : IDF OPP IDF
 |IDF
 |VALUES
 |COMPARAISON
-|IDF INCREM
-|IDF DECREM
+|IDF INCREM // a revoir
+|IDF DECREM // a revoir
 
 BOUCLE: FOR PARG AFFECTATION PVG COMPARAISON PVG Compteur PARD CrochetG Liste_instructions CrochetD{
-    printf("\nBoucle valide");
+    printf("\nBoucle valide\n");
 }
 
 COMPARAISON: Expression OppCond Expression
@@ -84,7 +84,14 @@ Compteur : AFFECTATION
 |IDF INCREM
 |IDF DECREM
 
-CONDITION: 
+CONDITION: IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD ELSE CrochetG Liste_instructions CrochetD
+{
+    printf("\nCondition valide avec ELSE\n");
+}
+|IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD 
+{
+    printf("\nCondition valide sans ELSE\n");
+}
 
 %%  
 

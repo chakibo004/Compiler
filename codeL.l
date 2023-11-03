@@ -10,6 +10,9 @@
 %}
 
 %option yylineno
+comentIntr [^-\n]*|("\\-")*
+Commentaire "{"{comentIntr}*"}"
+
 const_bool  "true"|"false"|"vrai"|"faux"
 lettreMaj [A-Z]
 lettre [a-zA-Z]
@@ -26,6 +29,11 @@ const_float [+-]?({chiffre}+)"."({chiffre}+)
 "BEGIN" {printf("\nDébut du programme\n");return BEG;}
 "END" {printf("\nFin du programme\n");return END;}
 "For" { printf(" BOUCLE FOR "); return FOR;}
+"If" {printf("If"); return IF;}
+"else" {printf("else"); return ELSE;}
+
+{Commentaire} {yylval.string=strdup(yytext);col+=yyleng;printf("\n%s est un commentaire\n",yytext);}
+
 {const_bool} {
     yylval.string=strdup(yytext);
     printf("%s ",yytext);
@@ -79,8 +87,8 @@ const_float [+-]?({chiffre}+)"."({chiffre}+)
 ")"   { printf(" ) "); return PARD;}
 "++"  { printf(" + 1"); return INCREM;}
 "--"  { printf(" - 1"); return DECREM;}
-"{"   { printf("{\n"); return CrochetG;}
-"}"   { printf("\n}"); return CrochetD;}
+"{"   { printf("{\n\t"); return CrochetG;}
+"}"   { printf("\t}"); return CrochetD;}
 
 [ \t] {}
 [\n] {nblignes++;}
