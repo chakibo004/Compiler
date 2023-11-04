@@ -1,5 +1,5 @@
 const float B=1,C=5,G=10;
-int A = 4,B = 12,C,DF,R=48;
+int Aaa_a = 5,B = 12,C,DF,R=48;
 float A;
 FLOAT K,L,O;
 const bool Ma = true;
@@ -13,12 +13,12 @@ X := 9 - 5 * 4*A;
 H := 1<2;
 Verif := vrai;
 
-For(i:=0;i<5;i++){
-    For(i:=0;i<5;i++){
+For(I:=0;I<5;I++){
+    For(I:=0;I<5;I++){
         C := 4 + 5 + 3;
     }
 
-    If(i==1+y-h){
+    If(I==1+Y-H){
         C := 4 + 5 + 3;
     }else{
         C := 4 + 5 + 3;
@@ -29,11 +29,10 @@ For(i:=0;i<5;i++){
     X := 9 - 5 * 4*A;
 }
 
-{AG} 
-{G
-}
+{A}G}
+{G}
 
-    For(i:=0;i<5;i++){
+    For(I:=0;I<5;I++){
         C := 4 + 5 + 3;
     }
 

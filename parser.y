@@ -2,8 +2,6 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
-    int yylineo = 1;
-    int col = 1 ;
     # define YYSTYPE float
 %}
 
@@ -24,7 +22,7 @@
 %token VIRGULE 
 %token PLUS SUB MUL DIV INCREM DECREM
 %token SUP SUPEGAL INF INFEGAL DIFF EGAL DPAFF IF ELSE
-%token FOR PARG PARD CrochetG CrochetD
+%token FOR PARG PARD CrochetG CrochetD Commentaire
 %start program
 
 %%
@@ -32,7 +30,6 @@
 program : Liste_declarations BEG Liste_instructions END {
   printf("Programme valide\n");
 }
-
 
 OPP : PLUS|SUB|MUL|DIV
 OppCond : SUP|SUPEGAL|INF|INFEGAL|DIFF|EGAL
@@ -62,6 +59,7 @@ Instruction
 Instruction : AFFECTATION PVG
 |BOUCLE
 |CONDITION
+|Commentaire {printf("\nCommentaire\n");}
 
 AFFECTATION : IDF DPAFF Expression
 
@@ -113,6 +111,32 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void yyerror (char *str){
-    printf("SYNTAX ERROR");
+void yyerror() {
+    printf("\n\nSYNTAX ERROR:");
+    exit(EXIT_FAILURE);
+}
+
+void LXerror(char *error, char *msg,int line, int col){
+    if (error != NULL && msg != NULL) {
+        printf("\n\nLEXICAL ERROR: %s IN %s at line ::: %d col ::: %d\n", error, msg, line, col);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void SNerror(char *error, char *msg,int line, int col) {
+    if (error != NULL && msg != NULL) {
+        printf("\n\nSYNTAX ERROR: %s IN %s at line ::: %d col ::: %d\n", error, msg, line, col);
+    }
+    exit(EXIT_FAILURE);
+}
+
+int find_char(const char* chaine, char caractere) {
+    int longueur = strlen(chaine);
+
+    for (int i = 1; i < longueur - 1; i++) {
+        if (chaine[i] == caractere) {
+            return 1; 
+        }
+    }
+    return 0; 
 }

@@ -3,18 +3,15 @@
     #include <stdlib.h>
     #include <string.h>
     #include "parser.tab.h"
-    extern int yylineo;
-    int col;
+    int col=0;
     extern YYSTYPE yylval;
     int nblignes=1;
 %}
 
 %option yylineno
-comentIntr [^-\n]*|("\\-")*
-Commentaire "{"{comentIntr}*"}"
-
+commentintr [^-\n]*
+Commentaire "{"{commentintr}"}"
 const_bool  "true"|"false"|"vrai"|"faux"
-lettreMaj [A-Z]
 lettre [a-zA-Z]
 chiffre [0-9]
 idf {lettre}({lettre}|{chiffre}|_)*
@@ -22,77 +19,80 @@ const_int [+-]?{chiffre}+
 const_float [+-]?({chiffre}+)"."({chiffre}+)
 %%
 
-"INT"|"int" {printf("INT: ");yylval.string=strdup(yytext);col=0;col+=yyleng;return INT;}
-"FLOAT"|"float" {printf("FLOAT: ");yylval.string=strdup(yytext);col=0;col+=yyleng;return FLOAT;}
-"BOOL"|"bool" {printf("BOOL: ");yylval.string=strdup(yytext);col=0;col+=yyleng;return BOOL;}
-"CONST"|"const" {printf("Constante: ");yylval.string=strdup(yytext);col=0;col+=yyleng;return CONST;}
-"BEGIN" {printf("\nDébut du programme\n");return BEG;}
-"END" {printf("\nFin du programme\n");return END;}
-"For" { printf(" BOUCLE FOR "); return FOR;}
-"If" {printf("If"); return IF;}
-"else" {printf("else"); return ELSE;}
+"INT"|"int" {col+=yyleng; printf("INT: ");col+=yyleng;return INT;}
+"FLOAT"|"float" {col+=yyleng; printf("FLOAT: ");col+=yyleng;return FLOAT;}
+"BOOL"|"bool" {col+=yyleng; printf("BOOL: ");col+=yyleng;return BOOL;}
+"CONST"|"const" {col+=yyleng; printf("Constante: ");col+=yyleng;return CONST;}
+"BEGIN" {col+=yyleng; printf("\nDébut du programme\n");return BEG;}
+"END" {col+=yyleng; printf("\nFin du programme\n");return END;}
+"For" { col+=yyleng; printf(" BOUCLE FOR "); return FOR;}
+"If" {col+=yyleng; printf("If"); return IF;}
+"else" {col+=yyleng; printf("else"); return ELSE;}
 
-{Commentaire} {yylval.string=strdup(yytext);col+=yyleng;printf("\n%s est un commentaire\n",yytext);}
+{Commentaire} {if(!find_char(yytext,'{') && !find_char(yytext,'}')){
+        return Commentaire;
+    }else{
+        SNerror("BAD SYNTAX COMMENT",yytext,nblignes,col);
+    }
+}
 
 {const_bool} {
     yylval.string=strdup(yytext);
     printf("%s ",yytext);
-    col = col + strlen(yytext);
+    col+=yyleng;
     return const_bool;
 }
 
 {idf} {
-    if(yyleng<=10 && yytext[yyleng - 1]!='_' && !strstr(yytext, "__") ){
+    if(yyleng<=10 && yytext[yyleng - 1]!='_' && !strstr(yytext, "__") && isupper(yytext[0])){
         printf("VAR:%s" ,yytext);
-        col = col + strlen(yytext);
+        col+=yyleng;
         yylval.string=strdup(yytext);
         return IDF;
     }else{
-        printf("Pas Idf:%s\n",yytext);
+        LXerror("UNRECOGNIZED ENTITY",yytext,nblignes,col);
     }
 }
 
 {const_int} {
     yylval.entier=atoi(yytext);
     printf("%d",atoi(yytext));
-    col = col + strlen(yytext);
+    col+=yyleng;
     return const_int;
 }
 
 {const_float} {
     yylval.reel=atof(yytext);
     printf("%f",atof(yytext));
-    col = col + strlen(yytext);
+    col+=yyleng;
     return const_float;
 }
 
+"+"   { col+=yyleng;printf(" + ");return PLUS;}
+"*"   { col+=yyleng;printf(" * ");return MUL;}
+"/"   { col+=yyleng;printf(" / ");return DIV;}
+"-"   { col+=yyleng;printf(" - ");return SUB;}
+"="   { col+=yyleng;printf(" = ");return AFF;}
+";"   { col+=yyleng;printf("\n");return PVG;}
+","   { col+=yyleng;printf(", ");return VIRGULE;}
 
-"+"   { printf(" + ");return PLUS;}
-"*"   { printf(" * ");return MUL;}
-"/"   { printf(" / ");return DIV;}
-"-"   { printf(" - ");return SUB;}
-"="   { printf(" = ");return AFF;}
-";"   { printf("\n");return PVG;}
-","   { printf(", ");return VIRGULE;}
+">"   { col+=yyleng;printf(" SUP "); return SUP;}
+"<"   { col+=yyleng;printf(" INF "); return INF;}
+">="  { col+=yyleng;printf(" SUPEGAL "); return SUPEGAL;}
+"<="  { col+=yyleng;printf(" INFEGAL "); return INFEGAL;}
+"=="  { col+=yyleng;printf(" EGAL "); return EGAL;}
+"<>"  { col+=yyleng;printf(" DIFF "); return DIFF;}
+":="  { col+=yyleng;printf(" = "); return DPAFF;}
 
-">"   { printf(" SUP "); return SUP;}
-"<"   { printf(" INF "); return INF;}
-">="  { printf(" SUPEGAL "); return SUPEGAL;}
-"<="  { printf(" INFEGAL "); return INFEGAL;}
-"=="  { printf(" EGAL "); return EGAL;}
-"<>"  { printf(" DIFF "); return DIFF;}
-":="  { printf(" = "); return DPAFF;}
+"("   { col+=yyleng;printf(" ( "); return PARG;}
+")"   { col+=yyleng;printf(" ) "); return PARD;}
+"++"  { col+=yyleng;printf(" + 1"); return INCREM;}
+"--"  { col+=yyleng;printf(" - 1"); return DECREM;}
+"{"   { col+=yyleng;printf("{\n\t"); return CrochetG;}
+"}"   { col+=yyleng;printf("\t}"); return CrochetD;}
 
-"("   { printf(" ( "); return PARG;}
-")"   { printf(" ) "); return PARD;}
-"++"  { printf(" + 1"); return INCREM;}
-"--"  { printf(" - 1"); return DECREM;}
-"{"   { printf("{\n\t"); return CrochetG;}
-"}"   { printf("\t}"); return CrochetD;}
-
-[ \t] {}
-[\n] {nblignes++;}
-. {printf("\nErreur lexicale au niveau de la ligne Num = %d , la colonne Num = %d , l'entite : %s . \n",nblignes, col, yytext); col=0;col=col+strlen(yytext);}
+[ \t] {col+=yyleng;}
+[\n] {col=1;nblignes++;}
 
 %%
 yywrap(){}
