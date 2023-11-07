@@ -9,19 +9,20 @@
 %}
 
 %option yylineno
-commentintr [^-\n]*
+commentintr [^-\n{}]*
 Commentaire "{"{commentintr}"}"
 const_bool  "true"|"false"|"vrai"|"faux"
+LettreMaj [A-Z]
 lettre [a-zA-Z]
 chiffre [0-9]
-idf {lettre}({lettre}|{chiffre}|_)*
+idf [A-Z]|([A-Z](_[a-zA-Z]|_[0-9]|[a-zA-Z0-9]){0,9})
 const_int [+-]?{chiffre}+
 const_float [+-]?({chiffre}+)"."({chiffre}+)
 %%
 
-"INT"|"int" {col+=yyleng; printf("INT: ");col+=yyleng;return INT;}
-"FLOAT"|"float" {col+=yyleng; printf("FLOAT: ");col+=yyleng;return FLOAT;}
-"BOOL"|"bool" {col+=yyleng; printf("BOOL: ");col+=yyleng;return BOOL;}
+"INT"|"int" {col+=yyleng; printf("Type: INT: ");col+=yyleng;return INT;}
+"FLOAT"|"float" {col+=yyleng; printf("Type: FLOAT: ");col+=yyleng;return FLOAT;}
+"BOOL"|"bool" {col+=yyleng; printf("Type: BOOL: ");col+=yyleng;return BOOL;}
 "CONST"|"const" {col+=yyleng; printf("Constante: ");col+=yyleng;return CONST;}
 "BEGIN" {col+=yyleng; printf("\nDébut du programme\n");return BEG;}
 "END" {col+=yyleng; printf("\nFin du programme\n");return END;}
@@ -29,11 +30,8 @@ const_float [+-]?({chiffre}+)"."({chiffre}+)
 "If" {col+=yyleng; printf("If"); return IF;}
 "else" {col+=yyleng; printf("else"); return ELSE;}
 
-{Commentaire} {if(!find_char(yytext,'{') && !find_char(yytext,'}')){
-        return Commentaire;
-    }else{
-        SNerror("BAD SYNTAX COMMENT",yytext,nblignes,col);
-    }
+{Commentaire} {
+    return Commentaire;
 }
 
 {const_bool} {
@@ -44,14 +42,13 @@ const_float [+-]?({chiffre}+)"."({chiffre}+)
 }
 
 {idf} {
-    if(yyleng<=10 && yytext[yyleng - 1]!='_' && !strstr(yytext, "__") && isupper(yytext[0])){
-        printf("VAR:%s" ,yytext);
-        col+=yyleng;
-        yylval.string=strdup(yytext);
-        return IDF;
-    }else{
-        LXerror("UNRECOGNIZED ENTITY",yytext,nblignes,col);
+    if(yyleng>10){
+        LXerror("UNRECOGNIZED IDF TOO MUCH LONG",yytext,nblignes,col);
     }
+    printf("VAR:%s" ,yytext);
+    col+=yyleng;
+    yylval.string=strdup(yytext);
+    return IDF;
 }
 
 {const_int} {
@@ -73,7 +70,7 @@ const_float [+-]?({chiffre}+)"."({chiffre}+)
 "/"   { col+=yyleng;printf(" / ");return DIV;}
 "-"   { col+=yyleng;printf(" - ");return SUB;}
 "="   { col+=yyleng;printf(" = ");return AFF;}
-";"   { col+=yyleng;printf("\n");return PVG;}
+";"   { col+=yyleng;printf(" ;\n");return PVG;}
 ","   { col+=yyleng;printf(", ");return VIRGULE;}
 
 ">"   { col+=yyleng;printf(" SUP "); return SUP;}
@@ -92,7 +89,10 @@ const_float [+-]?({chiffre}+)"."({chiffre}+)
 "}"   { col+=yyleng;printf("\t}"); return CrochetD;}
 
 [ \t] {col+=yyleng;}
-[\n] {col=1;nblignes++;}
+[\n] {col=0;nblignes++;}
 
+. {printf("\nLEXICAL ERROR : %s , at line %d col %d",yytext,nblignes,col);
+    exit(EXIT_FAILURE);
+    }
 %%
 yywrap(){}

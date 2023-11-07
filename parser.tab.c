@@ -1449,6 +1449,13 @@ yyreduce:
 ;}
     break;
 
+  case 17:
+
+/* Line 1455 of yacc.c  */
+#line 39 "parser.y"
+    {printf("%f",yylval);;}
+    break;
+
   case 34:
 
 /* Line 1455 of yacc.c  */
@@ -1486,7 +1493,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 1490 "parser.tab.c"
+#line 1497 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
