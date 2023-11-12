@@ -6,10 +6,8 @@ typedef struct{
 
 }TypeTS;
 
-
 TypeTS TS[1000];
 int cptTS=0;
-
 
 int rechercher(char entite[]){
     int i=0;
@@ -30,6 +28,16 @@ void inserer(char entite[],char code[],char type[], char isconstant[]){
         strcpy(TS[cptTS].isConstant,isconstant);
         cptTS++;
     }
+}
+
+int isconst(char entite[]){
+	int i=0; 
+  	while(i<cptTS) { 
+  		if (strcmp(entite,TS[i].NomEntite) == 0 && strcmp("oui",TS[i].isConstant) == 0)
+  		return 1; 
+  	    i++;
+  	}
+  	return 0;
 }
 
 

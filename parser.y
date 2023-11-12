@@ -3,6 +3,8 @@
     #include <stdlib.h>
     #include <string.h>
     char TYPE[200];
+    char VALUES[200];
+    int nblignes=1;
 %}
 
 %union {
@@ -21,7 +23,7 @@
 %token <string> Idf 
 %token <entier> const_int <reel> const_float <string> const_bool
 %token VIRGULE 
-%token PLUS SUB MUL DIV INCREM DECREM
+%token <string> PLUS <string> SUB <string> MUL <string> DIV INCREM DECREM
 %token SUP SUPEGAL INF INFEGAL DIFF EGAL DPAFF IF ELSE
 %token FOR PARG PARD CrochetG CrochetD Commentaire
 
@@ -30,33 +32,30 @@
 %%
 
 program : Liste_declarations BEG Liste_instructions END {
-  printf("Analyse syntaxique valide\n");
-  YYACCEPT;
+    printf("Analyse syntaxique valide\n");
+    YYACCEPT;
 }
 
-OPP : PLUS|SUB|MUL|DIV 
+OPP : PLUS|SUB|MUL|DIV
 OppCond : SUP|SUPEGAL|INF|INFEGAL|DIFF|EGAL
 type  : FLOAT {strcpy(TYPE,$1);}|BOOL {strcpy(TYPE,$1);}|INT {strcpy(TYPE,$1);}
+VALUES : const_int|const_float|const_bool
 
 DEC_IDF : Idf {
     if (rechercher($1)!=-1){
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE",$1);
-    } else{
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE a la ligne %d",$1,nblignes);
+    }else{
         inserer($1,"IDF",TYPE,"non");
     }
 }
 
 CONST_IDF: Idf {
     if (rechercher($1)!=-1){
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE",$1);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE a la ligne %d",$1,nblignes);
     } else{
         inserer($1,"IDF",TYPE,"oui");
     }
 }
-
-VALUES : const_int
-|const_float 
-|const_bool 
 
 Liste_declarations : Declaration PVG Liste_declarations 
 |Declaration PVG
@@ -72,34 +71,46 @@ DEC_VAR: DEC_IDF VIRGULE DEC_VAR
 DEC_CONST: CONST_IDF AFF VALUES VIRGULE DEC_CONST
 |CONST_IDF AFF VALUES
 
-Liste_instructions : Instruction Liste_instructions|
-Instruction
+Liste_instructions : Instruction Liste_instructions
+|Instruction
 
 Instruction : AFFECTATION PVG
 |BOUCLE
 |CONDITION
 |Commentaire
+|AUTOINCREMENT
+|AUTODECREMENT
 
-AFFECTATION : Idf DPAFF Expression
+AUTOINCREMENT: IDF_INST INCREM
+AUTODECREMENT: IDF_INST DECREM
 
-Expression : Idf OPP Idf
-|Idf OPP Expression
+IDF_INST: Idf{
+        if (rechercher($1)==-1){
+            printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE a la ligne %d",$1,nblignes);
+        }else if(isconst($1)){
+            printf("\nERREUR SEMANTIQUE LA CONSTANTE %s A CHANGE DE VALEUR a la ligne %d",$1,nblignes);
+        } 
+    }
+
+AFFECTATION : IDF_INST DPAFF Expression
+
+Expression : IDF_INST OPP IDF_INST
+|IDF_INST OPP Expression
 |Expression OPP Expression
-|Expression OPP Idf
-|Idf
+|Expression OPP IDF_INST
+|IDF_INST
 |VALUES
 |COMPARAISON
-|Idf INCREM // a revoir
-|Idf DECREM // a revoir
 
 BOUCLE: FOR PARG AFFECTATION PVG COMPARAISON PVG Compteur PARD CrochetG Liste_instructions CrochetD{
     printf("\nBoucle valide\n");
 }
 
 COMPARAISON: Expression OppCond Expression
+
 Compteur : AFFECTATION
-|Idf INCREM
-|Idf DECREM
+|AUTODECREMENT
+|AUTOINCREMENT
 
 CONDITION: IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD ELSE CrochetG Liste_instructions CrochetD
 {

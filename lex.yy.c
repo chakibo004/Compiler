@@ -483,7 +483,7 @@ char *yytext;
     #include "ts.h"
     int col=0;
     extern YYSTYPE yylval;
-    int nblignes=1;
+    extern int nblignes;
 #line 488 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
@@ -635,7 +635,7 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 22 "CodeL.l"
+#line 20 "CodeL.l"
 
 
 #line 642 "lex.yy.c"
@@ -731,59 +731,59 @@ do_action:	/* This label is used only to access EOF actions. */
 	{ /* beginning of action switch */
 case 1:
 YY_RULE_SETUP
-#line 24 "CodeL.l"
+#line 22 "CodeL.l"
 {col+=yyleng; yylval.string=strdup(yytext); col+=yyleng;return INT;}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 25 "CodeL.l"
+#line 23 "CodeL.l"
 {col+=yyleng;yylval.string=strdup(yytext); col+=yyleng;return FLOAT;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 26 "CodeL.l"
+#line 24 "CodeL.l"
 {col+=yyleng;yylval.string=strdup(yytext); col+=yyleng;return BOOL;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 27 "CodeL.l"
+#line 25 "CodeL.l"
 {col+=yyleng;yylval.string=strdup(yytext); col+=yyleng;return CONST;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 28 "CodeL.l"
-{col+=yyleng; return BEG;}
+#line 26 "CodeL.l"
+{inserer(yytext,"KEYWORD","/","/");col+=yyleng; return BEG;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 29 "CodeL.l"
-{col+=yyleng;return END;}
+#line 27 "CodeL.l"
+{inserer(yytext,"KEYWORD","/","/");col+=yyleng;return END;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 30 "CodeL.l"
-{ col+=yyleng; return FOR;}
+#line 28 "CodeL.l"
+{inserer(yytext,"KEYWORD","/","/");col+=yyleng; return FOR;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 31 "CodeL.l"
-{col+=yyleng;return IF;}
+#line 29 "CodeL.l"
+{inserer(yytext,"KEYWORD","/","/");col+=yyleng;return IF;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 32 "CodeL.l"
-{col+=yyleng; return ELSE;}
+#line 30 "CodeL.l"
+{inserer(yytext,"KEYWORD","/","/");col+=yyleng; return ELSE;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 34 "CodeL.l"
+#line 32 "CodeL.l"
 {
     return Commentaire;
 }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 38 "CodeL.l"
+#line 36 "CodeL.l"
 {
     yylval.string=strdup(yytext);
     col+=yyleng;
@@ -792,7 +792,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 44 "CodeL.l"
+#line 42 "CodeL.l"
 {
     if(yyleng>10){
         LXerror("\nUNRECOGNIZED IDF TOO MUCH LONG",yytext,nblignes,col);
@@ -804,7 +804,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 53 "CodeL.l"
+#line 51 "CodeL.l"
 {
     yylval.entier=atoi(yytext);
     col+=yyleng;
@@ -813,7 +813,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 59 "CodeL.l"
+#line 57 "CodeL.l"
 {
     yylval.reel=atof(yytext);
     col+=yyleng;
@@ -822,124 +822,124 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 65 "CodeL.l"
-{ col+=yyleng; return PLUS;}
+#line 63 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return PLUS;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 66 "CodeL.l"
-{ col+=yyleng; return MUL;}
+#line 64 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return MUL;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 67 "CodeL.l"
-{ col+=yyleng; return DIV;}
+#line 65 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return DIV;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 68 "CodeL.l"
-{ col+=yyleng; return SUB;}
+#line 66 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return SUB;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 69 "CodeL.l"
-{ col+=yyleng; return AFF;}
+#line 67 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return AFF;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 70 "CodeL.l"
-{ col+=yyleng; return PVG;}
+#line 68 "CodeL.l"
+{ inserer(yytext,"SEP","/","/");col+=yyleng; return PVG;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 71 "CodeL.l"
-{ col+=yyleng; return VIRGULE;}
+#line 69 "CodeL.l"
+{ inserer(yytext,"SEP","/","/");col+=yyleng; return VIRGULE;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 73 "CodeL.l"
-{ col+=yyleng; return SUP;}
+#line 71 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return SUP;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 74 "CodeL.l"
-{ col+=yyleng; return INF;}
+#line 72 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return INF;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 75 "CodeL.l"
-{ col+=yyleng; return SUPEGAL;}
+#line 73 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return SUPEGAL;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 76 "CodeL.l"
-{ col+=yyleng; return INFEGAL;}
+#line 74 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return INFEGAL;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 77 "CodeL.l"
-{ col+=yyleng; return EGAL;}
+#line 75 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return EGAL;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 78 "CodeL.l"
-{ col+=yyleng; return DIFF;}
+#line 76 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return DIFF;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 79 "CodeL.l"
-{ col+=yyleng; return DPAFF;}
+#line 77 "CodeL.l"
+{ inserer(yytext,"OPP AFF","/","/");col+=yyleng; return DPAFF;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 81 "CodeL.l"
-{ col+=yyleng; return PARG;}
+#line 79 "CodeL.l"
+{ inserer(yytext,"SEP","/","/");col+=yyleng; return PARG;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 82 "CodeL.l"
-{ col+=yyleng; return PARD;}
+#line 80 "CodeL.l"
+{ inserer(yytext,"SEP","/","/");col+=yyleng; return PARD;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 83 "CodeL.l"
-{ col+=yyleng; return INCREM;}
+#line 81 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return INCREM;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 84 "CodeL.l"
-{ col+=yyleng; return DECREM;}
+#line 82 "CodeL.l"
+{ inserer(yytext,"OPP","/","/");col+=yyleng; return DECREM;}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 85 "CodeL.l"
-{ col+=yyleng; return CrochetG;}
+#line 83 "CodeL.l"
+{ inserer(yytext,"SEP","/","/");col+=yyleng; return CrochetG;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 86 "CodeL.l"
-{ col+=yyleng; return CrochetD;}
+#line 84 "CodeL.l"
+{ inserer(yytext,"SEP","/","/");col+=yyleng; return CrochetD;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 88 "CodeL.l"
+#line 86 "CodeL.l"
 {col+=yyleng;}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 89 "CodeL.l"
+#line 87 "CodeL.l"
 {col=0;nblignes++;}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 91 "CodeL.l"
+#line 89 "CodeL.l"
 {printf("\nLEXICAL ERROR : %s , at line %d col %d",yytext,nblignes,col);
     exit(EXIT_FAILURE);
     }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 94 "CodeL.l"
+#line 92 "CodeL.l"
 ECHO;
 	YY_BREAK
 #line 946 "lex.yy.c"
@@ -1826,6 +1826,6 @@ int main()
 	return 0;
 	}
 #endif
-#line 94 "CodeL.l"
+#line 92 "CodeL.l"
 
 yywrap(){}

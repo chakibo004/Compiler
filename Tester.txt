@@ -3,8 +3,8 @@ int A_abbbbbbb = 5,B = 12,C,DF,R=48;
 float A;
 FLOAT K,L,O;
 const bool Ma = true;
-const float W = 32;
-bool Verif = faux;
+const float X = 32;
+const bool Verif = faux;
 BEGIN
 A := 3;
 A := B + 4;

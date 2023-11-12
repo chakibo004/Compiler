@@ -6,15 +6,13 @@
     #include "ts.h"
     int col=0;
     extern YYSTYPE yylval;
-    int nblignes=1;
+    extern int nblignes;
 %}
 
 %option yylineno
 commentintr [^-\n{}]*
 Commentaire "{*"{commentintr}"*}"
 const_bool  "true"|"false"|"vrai"|"faux"
-LettreMaj [A-Z]
-lettre [a-zA-Z]
 chiffre [0-9]
 idf [A-Z]|([A-Z](_[a-zA-Z]|_[0-9]|[a-zA-Z0-9]){0,9})
 const_int [+-]?{chiffre}+
@@ -25,11 +23,11 @@ const_float [+-]?({chiffre}+)"."({chiffre}+)
 "FLOAT"|"float" {col+=yyleng;yylval.string=strdup(yytext); col+=yyleng;return FLOAT;}
 "BOOL"|"bool" {col+=yyleng;yylval.string=strdup(yytext); col+=yyleng;return BOOL;}
 "CONST"|"const" {col+=yyleng;yylval.string=strdup(yytext); col+=yyleng;return CONST;}
-"BEGIN" {col+=yyleng; return BEG;}
-"END" {col+=yyleng;return END;}
-"For" { col+=yyleng; return FOR;}
-"If" {col+=yyleng;return IF;}
-"else" {col+=yyleng; return ELSE;}
+"BEGIN" {inserer(yytext,"KEYWORD","/","/");col+=yyleng; return BEG;}
+"END" {inserer(yytext,"KEYWORD","/","/");col+=yyleng;return END;}
+"For" {inserer(yytext,"KEYWORD","/","/");col+=yyleng; return FOR;}
+"If" {inserer(yytext,"KEYWORD","/","/");col+=yyleng;return IF;}
+"else" {inserer(yytext,"KEYWORD","/","/");col+=yyleng; return ELSE;}
 
 {Commentaire} {
     return Commentaire;
@@ -62,28 +60,28 @@ const_float [+-]?({chiffre}+)"."({chiffre}+)
     return const_float;
 }
 
-"+"   { col+=yyleng; return PLUS;}
-"*"   { col+=yyleng; return MUL;}
-"/"   { col+=yyleng; return DIV;}
-"-"   { col+=yyleng; return SUB;}
-"="   { col+=yyleng; return AFF;}
-";"   { col+=yyleng; return PVG;}
-","   { col+=yyleng; return VIRGULE;}
+"+"   { inserer(yytext,"OPP","/","/");col+=yyleng; return PLUS;}
+"*"   { inserer(yytext,"OPP","/","/");col+=yyleng; return MUL;}
+"/"   { inserer(yytext,"OPP","/","/");col+=yyleng; return DIV;}
+"-"   { inserer(yytext,"OPP","/","/");col+=yyleng; return SUB;}
+"="   { inserer(yytext,"OPP","/","/");col+=yyleng; return AFF;}
+";"   { inserer(yytext,"SEP","/","/");col+=yyleng; return PVG;}
+","   { inserer(yytext,"SEP","/","/");col+=yyleng; return VIRGULE;}
 
-">"   { col+=yyleng; return SUP;}
-"<"   { col+=yyleng; return INF;}
-">="  { col+=yyleng; return SUPEGAL;}
-"<="  { col+=yyleng; return INFEGAL;}
-"=="  { col+=yyleng; return EGAL;}
-"<>"  { col+=yyleng; return DIFF;}
-":="  { col+=yyleng; return DPAFF;}
+">"   { inserer(yytext,"OPP","/","/");col+=yyleng; return SUP;}
+"<"   { inserer(yytext,"OPP","/","/");col+=yyleng; return INF;}
+">="  { inserer(yytext,"OPP","/","/");col+=yyleng; return SUPEGAL;}
+"<="  { inserer(yytext,"OPP","/","/");col+=yyleng; return INFEGAL;}
+"=="  { inserer(yytext,"OPP","/","/");col+=yyleng; return EGAL;}
+"<>"  { inserer(yytext,"OPP","/","/");col+=yyleng; return DIFF;}
+":="  { inserer(yytext,"OPP AFF","/","/");col+=yyleng; return DPAFF;}
 
-"("   { col+=yyleng; return PARG;}
-")"   { col+=yyleng; return PARD;}
-"++"  { col+=yyleng; return INCREM;}
-"--"  { col+=yyleng; return DECREM;}
-"{"   { col+=yyleng; return CrochetG;}
-"}"   { col+=yyleng; return CrochetD;}
+"("   { inserer(yytext,"SEP","/","/");col+=yyleng; return PARG;}
+")"   { inserer(yytext,"SEP","/","/");col+=yyleng; return PARD;}
+"++"  { inserer(yytext,"OPP","/","/");col+=yyleng; return INCREM;}
+"--"  { inserer(yytext,"OPP","/","/");col+=yyleng; return DECREM;}
+"{"   { inserer(yytext,"SEP","/","/");col+=yyleng; return CrochetG;}
+"}"   { inserer(yytext,"SEP","/","/");col+=yyleng; return CrochetD;}
 
 [ \t] {col+=yyleng;}
 [\n] {col=0;nblignes++;}

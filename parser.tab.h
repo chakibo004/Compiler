@@ -83,7 +83,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 8 "parser.y"
+#line 10 "parser.y"
 
     int entier;
     char* string;
