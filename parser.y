@@ -2,7 +2,7 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
-    # define YYSTYPE float
+    char TYPE[200];
 %}
 
 %union {
@@ -18,40 +18,59 @@
 %token <string> BOOL
 %token BEG END 
 %token <string> CONST
-%token <string> IDF <entier> const_int <reel> const_float <string> const_bool
+%token <string> Idf 
+%token <entier> const_int <reel> const_float <string> const_bool
 %token VIRGULE 
 %token PLUS SUB MUL DIV INCREM DECREM
 %token SUP SUPEGAL INF INFEGAL DIFF EGAL DPAFF IF ELSE
 %token FOR PARG PARD CrochetG CrochetD Commentaire
+
 %start program
 
 %%
 
 program : Liste_declarations BEG Liste_instructions END {
-  printf("Programme valide\n");
+  printf("Analyse syntaxique valide\n");
+  YYACCEPT;
 }
 
-OPP : PLUS|SUB|MUL|DIV
+OPP : PLUS|SUB|MUL|DIV 
 OppCond : SUP|SUPEGAL|INF|INFEGAL|DIFF|EGAL
-type  : FLOAT|BOOL|INT
+type  : FLOAT {strcpy(TYPE,$1);}|BOOL {strcpy(TYPE,$1);}|INT {strcpy(TYPE,$1);}
+
+DEC_IDF : Idf {
+    if (rechercher($1)!=-1){
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE",$1);
+    } else{
+        inserer($1,"IDF",TYPE,"non");
+    }
+}
+
+CONST_IDF: Idf {
+    if (rechercher($1)!=-1){
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE",$1);
+    } else{
+        inserer($1,"IDF",TYPE,"oui");
+    }
+}
 
 VALUES : const_int
-|const_float
-|const_bool
+|const_float 
+|const_bool 
 
 Liste_declarations : Declaration PVG Liste_declarations 
 |Declaration PVG
 
-Declaration : type DEC_VAR  
+Declaration : type DEC_VAR
 |CONST type DEC_CONST 
 
-DEC_VAR: IDF VIRGULE DEC_VAR 
-|IDF AFF VALUES VIRGULE DEC_VAR
-|IDF AFF VALUES
-|IDF
+DEC_VAR: DEC_IDF VIRGULE DEC_VAR 
+|DEC_IDF AFF VALUES VIRGULE DEC_VAR
+|DEC_IDF AFF VALUES
+|DEC_IDF
 
-DEC_CONST: IDF AFF VALUES VIRGULE DEC_CONST
-|IDF AFF VALUES
+DEC_CONST: CONST_IDF AFF VALUES VIRGULE DEC_CONST
+|CONST_IDF AFF VALUES
 
 Liste_instructions : Instruction Liste_instructions|
 Instruction
@@ -59,19 +78,19 @@ Instruction
 Instruction : AFFECTATION PVG
 |BOUCLE
 |CONDITION
-|Commentaire {printf("\nCommentaire\n");}
+|Commentaire
 
-AFFECTATION : IDF DPAFF Expression
+AFFECTATION : Idf DPAFF Expression
 
-Expression : IDF OPP IDF
-|IDF OPP Expression
+Expression : Idf OPP Idf
+|Idf OPP Expression
 |Expression OPP Expression
-|Expression OPP IDF
-|IDF
+|Expression OPP Idf
+|Idf
 |VALUES
 |COMPARAISON
-|IDF INCREM // a revoir
-|IDF DECREM // a revoir
+|Idf INCREM // a revoir
+|Idf DECREM // a revoir
 
 BOUCLE: FOR PARG AFFECTATION PVG COMPARAISON PVG Compteur PARD CrochetG Liste_instructions CrochetD{
     printf("\nBoucle valide\n");
@@ -79,8 +98,8 @@ BOUCLE: FOR PARG AFFECTATION PVG COMPARAISON PVG Compteur PARD CrochetG Liste_in
 
 COMPARAISON: Expression OppCond Expression
 Compteur : AFFECTATION
-|IDF INCREM
-|IDF DECREM
+|Idf INCREM
+|Idf DECREM
 
 CONDITION: IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD ELSE CrochetG Liste_instructions CrochetD
 {
@@ -108,6 +127,8 @@ int main(int argc, char *argv[]) {
     yyparse();
 
     fclose(file);
+
+    afficher();
     return 0;
 }
 
@@ -130,13 +151,3 @@ void SNerror(char *error, char *msg,int line, int col) {
     exit(EXIT_FAILURE);
 }
 
-int find_char(const char* chaine, char caractere) {
-    int longueur = strlen(chaine);
-
-    for (int i = 1; i < longueur - 1; i++) {
-        if (chaine[i] == caractere) {
-            return 1; 
-        }
-    }
-    return 0; 
-}

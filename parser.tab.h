@@ -47,7 +47,7 @@
      BEG = 263,
      END = 264,
      CONST = 265,
-     IDF = 266,
+     Idf = 266,
      const_int = 267,
      const_float = 268,
      const_bool = 269,
