@@ -2,9 +2,37 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
-    char TYPE[200];
-    char VALUES[200];
+    #define MAX_NUM_LENGTH 50
+
+    char Var_type[200];
     int nblignes=1;
+    int col=1;
+    char type_VALUE[200];
+    char num_VALUE[200];
+    char sauvOpr[200];
+    char VARAFF[200];
+    char type_Calcul[200];
+    char type_Expression[200];
+    char valeur[200];
+    char result[1000];
+
+    char* mirrorString(const char* str) {
+        int length = strlen(str);
+        char* mirroredStr = (char*)malloc((length + 1) * sizeof(char));
+        
+        if (mirroredStr == NULL) {
+            fprintf(stderr, "Memory allocation error\n");
+            exit(EXIT_FAILURE);
+        }
+
+        for (int i = 0; i < length; ++i) {
+            mirroredStr[i] = str[length - 1 - i];
+        }
+
+        mirroredStr[length] = '\0'; 
+        return mirroredStr;
+    }
+
 %}
 
 %union {
@@ -21,39 +49,70 @@
 %token BEG END 
 %token <string> CONST
 %token <string> Idf 
-%token <entier> const_int <reel> const_float <string> const_bool
+%token <string> const_int <string> const_float <string> const_bool
 %token VIRGULE 
 %token <string> PLUS <string> SUB <string> MUL <string> DIV INCREM DECREM
 %token SUP SUPEGAL INF INFEGAL DIFF EGAL DPAFF IF ELSE
 %token FOR PARG PARD CrochetG CrochetD Commentaire
 
+
+%left MUL DIV
+%left SUB PLUS
 %start program
 
 %%
 
 program : Liste_declarations BEG Liste_instructions END {
-    printf("Analyse syntaxique valide\n");
+    printf("\nAnalyse syntaxique valide\n");
     YYACCEPT;
 }
 
-OPP : PLUS|SUB|MUL|DIV
+OPP : PLUS{push("+");}
+|SUB{push("-");}
+|MUL{push("*");}
+|DIV{push("/");}
+
 OppCond : SUP|SUPEGAL|INF|INFEGAL|DIFF|EGAL
-type  : FLOAT {strcpy(TYPE,$1);}|BOOL {strcpy(TYPE,$1);}|INT {strcpy(TYPE,$1);}
-VALUES : const_int|const_float|const_bool
+type  : FLOAT {strcpy(Var_type,$1);}|BOOL {strcpy(Var_type,$1);}|INT {strcpy(Var_type,$1);}
+DEC_VALUES : const_int{strcpy(type_VALUE,"int");strcpy(num_VALUE,$1);}|const_float{strcpy(type_VALUE,"float");strcpy(num_VALUE,$1);}|const_bool{strcpy(type_VALUE,"bool");strcpy(num_VALUE,$1);}
+INSTR_VALUES : const_int{strcpy(type_VALUE,"int");push($1);}|const_float{strcpy(type_VALUE,"float");push($1);}|const_bool{strcpy(type_VALUE,"bool");push($1);}
 
 DEC_IDF : Idf {
-    if (rechercher($1)!=-1){
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE a la ligne %d",$1,nblignes);
+    if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")!=0){
+        printf("\nERREUR SEMANTIQUE ::: LA VARIABLE %s EST DEJA DECLAREE ligne ::: %d, col ::: %d",$1,nblignes,col);
+        exit(EXIT_FAILURE);
     }else{
-        inserer($1,"IDF",TYPE,"non");
+        UpdateTypeConst($1,Var_type,"non");
+    }
+}
+|Idf AFF DEC_VALUES {
+    if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")!=0){
+        printf("\nERREUR SEMANTIQUE ::: LA VARIABLE %s EST DEJA DECLAREE ::: ligne ::: %d, col ::: %d",$1,nblignes,col);
+        exit(EXIT_FAILURE);
+    }else{
+        UpdateTypeConst($1,Var_type,"non");        
+        if ((strcmp(Var_type, type_VALUE) == 0) || ((strcmp(Var_type, "float") == 0) && (strcmp(type_VALUE, "int") == 0))){
+            insertVALUE(num_VALUE);
+        }else{
+            printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d\n",$1,type_VALUE,Var_type,nblignes);
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
-CONST_IDF: Idf {
-    if (rechercher($1)!=-1){
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE a la ligne %d",$1,nblignes);
+
+CONST_IDF: Idf AFF DEC_VALUES{
+        if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")!=0){
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE ::: ligne %d",$1,nblignes);
+        exit(EXIT_FAILURE);
     } else{
-        inserer($1,"IDF",TYPE,"oui");
+        UpdateTypeConst($1,Var_type,"oui");
+        if ((strcmp(Var_type, type_VALUE) == 0) || ((strcmp(Var_type, "float") == 0) && (strcmp(type_VALUE, "int") == 0))){
+            insertVALUE(num_VALUE);
+        }else{
+            printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d\n",$1,type_VALUE,Var_type,nblignes);
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
@@ -64,12 +123,11 @@ Declaration : type DEC_VAR
 |CONST type DEC_CONST 
 
 DEC_VAR: DEC_IDF VIRGULE DEC_VAR 
-|DEC_IDF AFF VALUES VIRGULE DEC_VAR
-|DEC_IDF AFF VALUES
+|DEC_IDF VIRGULE DEC_VAR
 |DEC_IDF
 
-DEC_CONST: CONST_IDF AFF VALUES VIRGULE DEC_CONST
-|CONST_IDF AFF VALUES
+DEC_CONST: CONST_IDF VIRGULE DEC_CONST
+|CONST_IDF
 
 Liste_instructions : Instruction Liste_instructions
 |Instruction
@@ -81,30 +139,154 @@ Instruction : AFFECTATION PVG
 |AUTOINCREMENT
 |AUTODECREMENT
 
-AUTOINCREMENT: IDF_INST INCREM
-AUTODECREMENT: IDF_INST DECREM
+AUTOINCREMENT: Idf INCREM
+AUTODECREMENT: Idf DECREM
 
-IDF_INST: Idf{
-        if (rechercher($1)==-1){
-            printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE a la ligne %d",$1,nblignes);
+
+AFFECTATION :Idf DPAFF Expression{
+        if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")==0){
+            printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d",$1,nblignes);
+            exit(EXIT_FAILURE);
         }else if(isconst($1)){
-            printf("\nERREUR SEMANTIQUE LA CONSTANTE %s A CHANGE DE VALEUR a la ligne %d",$1,nblignes);
-        } 
+            printf("\nERREUR SEMANTIQUE ::: MODIFICATION DE CONSTANTE %s INTERDITE ::: ligne %d",$1,nblignes);
+            exit(EXIT_FAILURE);
+
+        }else{
+            if(strcmp(type_Calcul,typeIDF($1))==0 || strcmp(typeIDF($1),"float")==0){
+                strcpy(result,pop());
+                char* ret = mirrorString(result);
+
+                printf("\n Expression : %s",ret);
+                updateIDFValue($1,ret);
+            }else{
+                printf("\nERREUR SEMANTIQUE ::: INCOMPATIBILTE DE TYPE -> VARIABLE: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d\n",$1,type_Calcul,typeIDF($1),nblignes);
+                exit(EXIT_FAILURE);
+            }
+        }
+}
+
+
+
+ExpressionParenthese : PARG Expression PARD{
+    char* value = pop();
+    char* result = (char*)malloc((strlen("(") + strlen(value) + strlen(")") + 1) * sizeof(char));
+
+    strcpy(result, ")");
+    strcat(result, value);
+    strcat(result, "(");
+    push(result);
+
+}
+
+
+Expression : Expression OPP Expression {
+
+    char *right = pop();
+    char *OPR = pop();
+    char *left = pop();
+
+    char* expression = right; 
+    strcat(expression, OPR);
+    strcat(expression, left);
+    push(expression);
+}
+|Idf OPP Expression {
+
+    if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
+        exit(EXIT_FAILURE);
+
+    }else if (strcmp(getValue($1), "/") == 0) {
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", $1, nblignes);
+        exit(EXIT_FAILURE);
+    }else{
+
+        if (strcmp(typeIDF($1),"bool") == 0) {
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+            exit(EXIT_FAILURE);
+        }
+        char* right = pop();
+        strcpy(sauvOpr, pop());
+        strcpy(valeur,getValue($1));
+        char* ret = mirrorString(valeur);
+
+        strcpy(result,right);
+        strcat(result,sauvOpr);
+
+        strcat(result,ret);;
+
+        if(strcmp(typeIDF($1),type_Expression)==0){
+            strcpy(type_Calcul,type_Expression);
+        }else{
+            strcpy(type_Calcul,"float");
+        }
+
+        push(result);
+    }
+}
+|Idf {
+    if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
+        exit(EXIT_FAILURE);
+    }else{
+        if (strcmp(typeIDF($1), "bool") == 0) {
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+            exit(EXIT_FAILURE);
+        }
+        strcpy(type_Calcul,typeIDF($1));
+
+        strcpy(type_Expression,typeIDF($1));
+        strcpy(result,getValue($1));
+        char* ret = mirrorString(result);
+        push(ret);
+    }
+}
+|INSTR_VALUES OPP Expression{
+
+    char* right = pop();
+    char* OPR = pop();
+
+    if(strcmp(type_VALUE,type_Expression)==0){
+        strcpy(type_Calcul,type_Expression);
+    }else{
+        strcpy(type_Calcul,"float");
     }
 
-AFFECTATION : IDF_INST DPAFF Expression
 
-Expression : IDF_INST OPP IDF_INST
-|IDF_INST OPP Expression
-|Expression OPP Expression
-|Expression OPP IDF_INST
-|IDF_INST
-|VALUES
-|COMPARAISON
+    char* valeur = pop();
+    char* ret = mirrorString(valeur);
 
-BOUCLE: FOR PARG AFFECTATION PVG COMPARAISON PVG Compteur PARD CrochetG Liste_instructions CrochetD{
-    printf("\nBoucle valide\n");
+    strcpy(result,right);
+    strcat(result,OPR);
+    strcat(result,ret);
+    push(result);
+
 }
+|INSTR_VALUES{
+
+    if (strcmp(type_VALUE, "bool") == 0) {
+        printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+        exit(EXIT_FAILURE);
+    }
+    else{
+        strcpy(type_Calcul,type_VALUE);
+        strcpy(type_Expression,type_VALUE);
+
+        strcpy(result,pop());
+        char* ret = mirrorString(result);
+
+        push(ret);
+
+    }
+}
+|COMPARAISON
+|ExpressionParenthese
+
+
+
+
+
+BOUCLE: FOR PARG AFFECTATION PVG COMPARAISON PVG Compteur PARD CrochetG Liste_instructions CrochetD
 
 COMPARAISON: Expression OppCond Expression
 
@@ -113,13 +295,8 @@ Compteur : AFFECTATION
 |AUTOINCREMENT
 
 CONDITION: IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD ELSE CrochetG Liste_instructions CrochetD
-{
-    printf("\nCondition valide avec ELSE\n");
-}
 |IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD 
-{
-    printf("\nCondition valide sans ELSE\n");
-}
+
 
 %%  
 
@@ -144,7 +321,7 @@ int main(int argc, char *argv[]) {
 }
 
 void yyerror() {
-    printf("\n\nSYNTAX ERROR:");
+    printf("\n\nSYNTAX ERROR at line ::: %d",nblignes);
     exit(EXIT_FAILURE);
 }
 

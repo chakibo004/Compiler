@@ -1,37 +1,16 @@
-const float B=1.1,C=5,G=10;
-int A_abbbbbbb = 5,B = 12,C,DF,R=48;
-float A;
+const int C=8,G=10;
+float B = 1.1;
+int Jk,Ab = 5,ZZ=64,DF,R=48;
+float A = 51;
 FLOAT K,L,O;
-const bool Ma = true;
-const float X = 32;
-const bool Verif = faux;
+const bool Ma = false;
+const int X = 32;
+const float Z = 1.2;
+const bool Verif = true;
+float ZZZ;
+int I,Y,H;
+
+
 BEGIN
-A := 3;
-A := B + 4;
-C := 4 + 5 + 3;
-X := 9 - 5 * 4*A;
-H := 1<2;
-Verif := vrai;
-
-For(I:=0;I<5;I++){
-    For(I:=0;I<5;I++){C := 4 + 5 + 3;}
-
-    If(I==1+Y-H){
-        C := 4 + 5 + 3;
-    }else{
-        C := 4 + 5 + 3;
-    }
-
-    H := 1<2;
-    C := 4 + 5 + 3;
-    X := 9 - 5 * 4*A;
-}
-
-{*AG*}
-{*G*}
-
-    For(I:=0;I<5;I++){
-        C := 4 + 5 + 3;
-    }
-
-END
+    B := (105 + 59)*(4) - 9 + X / (8 + 2) - 9 * (1+R);
+END 
