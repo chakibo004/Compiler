@@ -2,6 +2,8 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
+    #include <ctype.h>
+
     #define MAX_NUM_LENGTH 50
 
     char Var_type[200];
@@ -15,6 +17,7 @@
     char type_Expression[200];
     char valeur[200];
     char result[1000];
+    char cond[1];
 
     char* mirrorString(const char* str) {
         int length = strlen(str);
@@ -33,6 +36,116 @@
         return mirroredStr;
     }
 
+    int isNumeric(char ch) { return (isdigit(ch) || ch == '.'); }
+
+    int isOperator(char ch) {
+        return (ch == '+' || ch == '-' || ch == '*' || ch == '/');
+    }
+
+    float performOperation(float operand1, float operand2, char operator) {
+        switch (operator) {
+            case '+':
+                return operand1 + operand2;
+            case '-':
+                return operand1 - operand2;
+            case '*':
+                return operand1 * operand2;
+            case '/':
+                if (operand2 != 0) {
+                return operand1 / operand2;
+                } else {
+                printf("Error: Division by zero\n");
+                exit(EXIT_FAILURE);
+                }
+            default:
+                printf("Error: Invalid operator\n");
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    float evaluate(char *expression) {
+        int len = strlen(expression);
+
+        float operandStack[len];
+        char operatorStack[len];
+        int operandTop = -1;
+        int operatorTop = -1;
+
+        for (int i = 0; i < len; i++) {
+            if (isNumeric(expression[i])) {
+
+            float operand = atof(&expression[i]);
+            while (i < len && isNumeric(expression[i])) {
+                i++;
+            }
+            i--; 
+            operandStack[++operandTop] = operand;
+            } else if (isOperator(expression[i])) {
+            
+            while (operatorTop >= 0 &&
+                    (operatorStack[operatorTop] == '+' ||
+                    operatorStack[operatorTop] == '-' ||
+                    operatorStack[operatorTop] == '*' ||
+                    operatorStack[operatorTop] == '/') &&
+                    (expression[i] == '+' || expression[i] == '-')) {
+                
+                float operand2 = operandStack[operandTop--];
+                float operand1 = operandStack[operandTop--];
+                char currentOperator = operatorStack[operatorTop--];
+                operandStack[++operandTop] =
+                    performOperation(operand1, operand2, currentOperator);
+            }
+
+            operatorStack[++operatorTop] = expression[i];
+            } else if (expression[i] == '(') {
+            operatorStack[++operatorTop] = expression[i];
+            } else if (expression[i] == ')') {
+            while (operatorTop >= 0 && operatorStack[operatorTop] != '(') {
+                float operand2 = operandStack[operandTop--];
+                float operand1 = operandStack[operandTop--];
+                char currentOperator = operatorStack[operatorTop--];
+                operandStack[++operandTop] =
+                    performOperation(operand1, operand2, currentOperator);
+            }
+            
+            operatorTop--;
+            }
+        }
+
+        while (operatorTop >= 0) {
+            float operand2 = operandStack[operandTop--];
+            float operand1 = operandStack[operandTop--];
+            char currentOperator = operatorStack[operatorTop--];
+            operandStack[++operandTop] =
+                performOperation(operand1, operand2, currentOperator);
+        }
+
+        return operandStack[operandTop];
+    }
+
+
+    int evaluateCondition(float operand1, char* condition, float operand2 ) {
+        int result;
+        if (strcmp(condition,"==")==0) {
+            result = operand1 == operand2;
+        } else if (strcmp(condition,">")==0) {
+            result = operand1 > operand2;
+        } else if (strcmp(condition,"<")==0) {
+            result = operand1 < operand2;
+        } else if (strcmp(condition,">=")==0) {
+            result = operand1 >= operand2;
+        } else if (strcmp(condition,"<=")==0) {
+            result = operand1 <= operand2;
+        } else if (strcmp(condition,"<>")==0) {
+            result = operand1 != operand2;
+        } else {
+            // Condition non reconnue
+            printf("Condition non prise en charge\n");
+            result = -1; // Valeur d'erreur
+        }
+        return result;
+    }
+    
 %}
 
 %union {
@@ -51,7 +164,7 @@
 %token <string> Idf 
 %token <string> const_int <string> const_float <string> const_bool
 %token VIRGULE 
-%token <string> PLUS <string> SUB <string> MUL <string> DIV INCREM DECREM
+%token <string> PLUS <string> SUB <string> MUL <string> DIV
 %token SUP SUPEGAL INF INFEGAL DIFF EGAL DPAFF IF ELSE
 %token FOR PARG PARD CrochetG CrochetD Commentaire
 
@@ -72,7 +185,13 @@ OPP : PLUS{push("+");}
 |MUL{push("*");}
 |DIV{push("/");}
 
-OppCond : SUP|SUPEGAL|INF|INFEGAL|DIFF|EGAL
+OppCond : SUP{push(">");}
+|SUPEGAL{push(">=");}
+|INF{push("<");}
+|INFEGAL{push("<=");}
+|DIFF{push("<>");}
+|EGAL{push("==");}
+
 type  : FLOAT {strcpy(Var_type,$1);}|BOOL {strcpy(Var_type,$1);}|INT {strcpy(Var_type,$1);}
 DEC_VALUES : const_int{strcpy(type_VALUE,"int");strcpy(num_VALUE,$1);}|const_float{strcpy(type_VALUE,"float");strcpy(num_VALUE,$1);}|const_bool{strcpy(type_VALUE,"bool");strcpy(num_VALUE,$1);}
 INSTR_VALUES : const_int{strcpy(type_VALUE,"int");push($1);}|const_float{strcpy(type_VALUE,"float");push($1);}|const_bool{strcpy(type_VALUE,"bool");push($1);}
@@ -100,7 +219,6 @@ DEC_IDF : Idf {
     }
 }
 
-
 CONST_IDF: Idf AFF DEC_VALUES{
         if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")!=0){
         printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE ::: ligne %d",$1,nblignes);
@@ -122,8 +240,7 @@ Liste_declarations : Declaration PVG Liste_declarations
 Declaration : type DEC_VAR
 |CONST type DEC_CONST 
 
-DEC_VAR: DEC_IDF VIRGULE DEC_VAR 
-|DEC_IDF VIRGULE DEC_VAR
+DEC_VAR: DEC_IDF VIRGULE DEC_VAR
 |DEC_IDF
 
 DEC_CONST: CONST_IDF VIRGULE DEC_CONST
@@ -136,51 +253,42 @@ Instruction : AFFECTATION PVG
 |BOUCLE
 |CONDITION
 |Commentaire
-|AUTOINCREMENT
-|AUTODECREMENT
+|AUTOOPERATION PVG
 
-AUTOINCREMENT: Idf INCREM
-AUTODECREMENT: Idf DECREM
-
-
-AFFECTATION :Idf DPAFF Expression{
-        if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")==0){
-            printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d",$1,nblignes);
-            exit(EXIT_FAILURE);
-        }else if(isconst($1)){
-            printf("\nERREUR SEMANTIQUE ::: MODIFICATION DE CONSTANTE %s INTERDITE ::: ligne %d",$1,nblignes);
-            exit(EXIT_FAILURE);
-
-        }else{
-            if(strcmp(type_Calcul,typeIDF($1))==0 || strcmp(typeIDF($1),"float")==0){
-                strcpy(result,pop());
-                char* ret = mirrorString(result);
-
-                printf("\n Expression : %s",ret);
-                updateIDFValue($1,ret);
-            }else{
-                printf("\nERREUR SEMANTIQUE ::: INCOMPATIBILTE DE TYPE -> VARIABLE: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d\n",$1,type_Calcul,typeIDF($1),nblignes);
-                exit(EXIT_FAILURE);
-            }
+AFFECTATION: Idf DPAFF Expression{
+    if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")==0){
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d",$1,nblignes);
+        exit(EXIT_FAILURE);
+    }else if(isconst($1)){
+        printf("\nERREUR SEMANTIQUE ::: MODIFICATION DE CONSTANTE %s INTERDITE ::: ligne %d",$1,nblignes);
+        exit(EXIT_FAILURE);
+    }else{
+        if(strcmp(type_Calcul,"bool")==0){
+            updateIDFValue($1,mirrorString(pop()));
         }
+        else if(strcmp(type_Calcul,typeIDF($1))==0 || strcmp(typeIDF($1),"float")==0){
+            strcpy(result,pop());
+            char* ret = mirrorString(result);
+            printf("\n Expression : %s",ret);
+            sprintf(ret,"%g",evaluate(ret));
+            updateIDFValue($1,ret);
+        }else{
+            printf("\nERREUR SEMANTIQUE ::: INCOMPATIBILTE DE TYPE -> VARIABLE: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d\n",$1,type_Calcul,typeIDF($1),nblignes);
+            exit(EXIT_FAILURE);
+        }
+    }
 }
-
-
 
 ExpressionParenthese : PARG Expression PARD{
     char* value = pop();
     char* result = (char*)malloc((strlen("(") + strlen(value) + strlen(")") + 1) * sizeof(char));
-
     strcpy(result, ")");
     strcat(result, value);
     strcat(result, "(");
     push(result);
-
 }
 
-
 Expression : Expression OPP Expression {
-
     char *right = pop();
     char *OPR = pop();
     char *left = pop();
@@ -195,13 +303,12 @@ Expression : Expression OPP Expression {
     if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
         printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
         exit(EXIT_FAILURE);
-
     }else if (strcmp(getValue($1), "/") == 0) {
         printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", $1, nblignes);
         exit(EXIT_FAILURE);
     }else{
 
-        if (strcmp(typeIDF($1),"bool") == 0) {
+        if (strcmp(typeIDF($1),"bool") == 0 || strcmp(type_Calcul,"bool") == 0) {
             printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
             exit(EXIT_FAILURE);
         }
@@ -213,7 +320,7 @@ Expression : Expression OPP Expression {
         strcpy(result,right);
         strcat(result,sauvOpr);
 
-        strcat(result,ret);;
+        strcat(result,ret);
 
         if(strcmp(typeIDF($1),type_Expression)==0){
             strcpy(type_Calcul,type_Expression);
@@ -228,14 +335,14 @@ Expression : Expression OPP Expression {
     if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
         printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
         exit(EXIT_FAILURE);
+    }else if (strcmp(getValue($1), "/") == 0) {
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", $1, nblignes);
+        exit(EXIT_FAILURE);
     }else{
-        if (strcmp(typeIDF($1), "bool") == 0) {
-            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
-            exit(EXIT_FAILURE);
-        }
-        strcpy(type_Calcul,typeIDF($1));
 
+        strcpy(type_Calcul,typeIDF($1));
         strcpy(type_Expression,typeIDF($1));
+
         strcpy(result,getValue($1));
         char* ret = mirrorString(result);
         push(ret);
@@ -245,6 +352,11 @@ Expression : Expression OPP Expression {
 
     char* right = pop();
     char* OPR = pop();
+
+    if (strcmp(type_VALUE,"bool") == 0 || strcmp(type_Calcul,"bool") == 0) {
+        printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+        exit(EXIT_FAILURE);
+    }
 
     if(strcmp(type_VALUE,type_Expression)==0){
         strcpy(type_Calcul,type_Expression);
@@ -263,7 +375,35 @@ Expression : Expression OPP Expression {
 
 }
 |INSTR_VALUES{
+    strcpy(type_Calcul,type_VALUE);
+    strcpy(type_Expression,type_VALUE);
 
+    strcpy(result,pop());
+    char* ret = mirrorString(result);
+
+    push(ret);
+}
+|PARG COMPARE_EXPR PARD
+|ExpressionParenthese
+
+COMPAREOPERANDS : Idf{
+    if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
+        exit(EXIT_FAILURE);
+    }else if (strcmp(getValue($1), "/") == 0) {
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", $1, nblignes);
+        exit(EXIT_FAILURE);
+    }else{
+        if (strcmp(typeIDF($1), "bool") == 0) {
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+            exit(EXIT_FAILURE);
+        }
+        strcpy(result,getValue($1));
+        char* ret = mirrorString(result);
+        push(ret);
+    }
+}
+|INSTR_VALUES{
     if (strcmp(type_VALUE, "bool") == 0) {
         printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
         exit(EXIT_FAILURE);
@@ -276,28 +416,67 @@ Expression : Expression OPP Expression {
         char* ret = mirrorString(result);
 
         push(ret);
-
     }
 }
-|COMPARAISON
-|ExpressionParenthese
 
+COMPARE_EXPR: COMPAREOPERANDS OppCond COMPAREOPERANDS{
+    int valeur = evaluateCondition(atof(pop()),pop(),atof(pop()));
+    char* result = (char*)malloc(sizeof(char));
 
+    sprintf(result,"%d",valeur);
+    push(result);
+}
 
+AUTOOPERATION : Idf PLUS PLUS{
+    if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
+        exit(EXIT_FAILURE);
+    }else if (strcmp(getValue($1), "/") == 0) {
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", $1, nblignes);
+        exit(EXIT_FAILURE);
+    }else{
+        char* valeur = getValue($1);
 
+        strcpy(result,valeur);
+        strcat(result,"+");
+        strcat(result,"1");
+        printf("\n%s\n",result);
+
+        sprintf(result,"%g",evaluate(result));
+        updateIDFValue($1,result);
+    }
+}
+|Idf SUB SUB{
+    if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
+        exit(EXIT_FAILURE);
+    }else if (strcmp(getValue($1), "/") == 0) {
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", $1, nblignes);
+        exit(EXIT_FAILURE);
+    }else{
+        char* valeur = getValue($1);
+
+        strcpy(result,valeur);
+        strcat(result,"-");
+        strcat(result,"1");
+        printf("\n%s\n",result);
+        sprintf(result,"%.2f",evaluate(result));
+        updateIDFValue($1,result);
+    }
+}
 
 BOUCLE: FOR PARG AFFECTATION PVG COMPARAISON PVG Compteur PARD CrochetG Liste_instructions CrochetD
-
-COMPARAISON: Expression OppCond Expression
-
-Compteur : AFFECTATION
-|AUTODECREMENT
-|AUTOINCREMENT
 
 CONDITION: IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD ELSE CrochetG Liste_instructions CrochetD
 |IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD 
 
+COMPARAISON : Expression OppCond Expression{
+    printf("\nligne ::: %d",nblignes);
+    printStack();
+}
 
+Compteur : AFFECTATION
+|AUTOOPERATION
 %%  
 
 int main(int argc, char *argv[]) {

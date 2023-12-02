@@ -80,8 +80,6 @@ const_float [+-]?({chiffre}+)"."({chiffre}+)
 
 "("   { col+=yyleng; return PARG;}
 ")"   { col+=yyleng; return PARD;}
-"++"  { col+=yyleng; return INCREM;}
-"--"  { col+=yyleng; return DECREM;}
 "{"   { col+=yyleng; return CrochetG;}
 "}"   { col+=yyleng; return CrochetD;}
 

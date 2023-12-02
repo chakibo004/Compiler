@@ -56,23 +56,21 @@
      SUB = 272,
      MUL = 273,
      DIV = 274,
-     INCREM = 275,
-     DECREM = 276,
-     SUP = 277,
-     SUPEGAL = 278,
-     INF = 279,
-     INFEGAL = 280,
-     DIFF = 281,
-     EGAL = 282,
-     DPAFF = 283,
-     IF = 284,
-     ELSE = 285,
-     FOR = 286,
-     PARG = 287,
-     PARD = 288,
-     CrochetG = 289,
-     CrochetD = 290,
-     Commentaire = 291
+     SUP = 275,
+     SUPEGAL = 276,
+     INF = 277,
+     INFEGAL = 278,
+     DIFF = 279,
+     EGAL = 280,
+     DPAFF = 281,
+     IF = 282,
+     ELSE = 283,
+     FOR = 284,
+     PARG = 285,
+     PARD = 286,
+     CrochetG = 287,
+     CrochetD = 288,
+     Commentaire = 289
    };
 #endif
 
@@ -83,7 +81,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 38 "parser.y"
+#line 151 "parser.y"
 
     int entier;
     char* string;
@@ -92,7 +90,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 96 "parser.tab.h"
+#line 94 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

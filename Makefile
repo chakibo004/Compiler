@@ -5,7 +5,7 @@ BISON_OUTPUT = parser.tab.c
 OUTPUT_BINARY = projet
 
 # Options pour GCC
-CFLAGS = -g
+CFLAGS = -g -w
 
 # Cibles par défaut
 all: $(OUTPUT_BINARY)

@@ -12,21 +12,20 @@ int cptTS=0;
 
 #define STACK_SIZE 100
 #define MAX_STRING_LENGTH 50
+#define STRING_SIZE 50
 
 char* stack[STACK_SIZE];
 int top = 0;
-
 
 int isEmpty(){
     return (top == 0);
 }
 
-void push(char* value) {
-    if (top < STACK_SIZE - 1) {
-        stack[top++]=value;
+void push(char* str){
+    if (top < STACK_SIZE) {
+        stack[top++] = str;
     } else {
-        fprintf(stderr, "Stack overflow\n");
-        exit(EXIT_FAILURE);
+        printf("Error: Stack overflow\n");
     }
 }
 
@@ -38,8 +37,6 @@ char* pop() {
         exit(EXIT_FAILURE);
     }
 }
-
-
 
 void printStack(){
   if (top == -1) {
@@ -96,7 +93,7 @@ char *getValue(char entite[]){
   	return "";
 }
 
-char *typeIDF (char entite[]){
+char *typeIDF(char entite[]){
 	int i=0; 
   	while(i<cptTS){ 
         if (strcmp(entite,TS[i].NomEntite)==0) 
