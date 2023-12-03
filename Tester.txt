@@ -3,24 +3,22 @@ FLOAT K,L,O;
 const bool Ma = true;
 const float W = 32;
 bool Verif = faux;
-int B = 5;
+int B = -5;
 int C;
 int I = 0;
 int H;
-int Y = 5;
+int Y = 8;
 BEGIN
 
-A := 3;
-A := B + 4;
+A := 3 + B;
 C := 4 + 5 + 3;
 I++;
 X := 9 - 5 * 4 * A / 1 + (1<2) - (2>3);
 H := 1 + (1<2) - (2>3);
-Verif := Ma;
 
-For(I:=0;I+A<5;I++){
+For(I:=0;I + 1<>5 + 8 + X;I++){
 
-    For(I:=0;I+A<5;I++){
+    For(I:=7;I + 5<101;I++){
         C := 4 + 5 + 3;
     }
 
@@ -36,7 +34,7 @@ For(I:=0;I+A<5;I++){
 }
 
 {*G*}
-    For(I:=0;I<5;I++){
+    For(I:=0;I<5;I:=I + 3){
         C := 4 + 5 + 3;
     }
 END

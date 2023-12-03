@@ -18,6 +18,7 @@
     char valeur[200];
     char result[1000];
     char cond[1];
+    char compexpr[10];
 
     char* mirrorString(const char* str) {
         int length = strlen(str);
@@ -63,6 +64,7 @@
         }
     }
 
+   
     float evaluate(char *expression) {
         int len = strlen(expression);
 
@@ -72,43 +74,42 @@
         int operatorTop = -1;
 
         for (int i = 0; i < len; i++) {
-            if (isNumeric(expression[i])) {
-
-            float operand = atof(&expression[i]);
-            while (i < len && isNumeric(expression[i])) {
-                i++;
-            }
-            i--; 
-            operandStack[++operandTop] = operand;
+            if (expression[i] == '-' && (i == 0 || !isNumeric(expression[i - 1]))) {
+                float operand = -atof(&expression[++i]); 
+                operandStack[++operandTop] = operand;
+            } else if (isNumeric(expression[i])) {
+                float operand = atof(&expression[i]);
+                while (i < len && (isNumeric(expression[i]) || expression[i] == '.')) {
+                    i++;
+                }
+                i--; 
+                operandStack[++operandTop] = operand;
             } else if (isOperator(expression[i])) {
-            
-            while (operatorTop >= 0 &&
+                while (operatorTop >= 0 &&
                     (operatorStack[operatorTop] == '+' ||
-                    operatorStack[operatorTop] == '-' ||
-                    operatorStack[operatorTop] == '*' ||
-                    operatorStack[operatorTop] == '/') &&
+                        operatorStack[operatorTop] == '-' ||
+                        operatorStack[operatorTop] == '*' ||
+                        operatorStack[operatorTop] == '/') &&
                     (expression[i] == '+' || expression[i] == '-')) {
-                
-                float operand2 = operandStack[operandTop--];
-                float operand1 = operandStack[operandTop--];
-                char currentOperator = operatorStack[operatorTop--];
-                operandStack[++operandTop] =
-                    performOperation(operand1, operand2, currentOperator);
-            }
+                    
+                    float operand2 = operandStack[operandTop--];
+                    float operand1 = operandStack[operandTop--];
+                    char currentOperator = operatorStack[operatorTop--];
+                    operandStack[++operandTop] = performOperation(operand1, operand2, currentOperator);
+                }
 
-            operatorStack[++operatorTop] = expression[i];
+                operatorStack[++operatorTop] = expression[i];
             } else if (expression[i] == '(') {
-            operatorStack[++operatorTop] = expression[i];
+                operatorStack[++operatorTop] = expression[i];
             } else if (expression[i] == ')') {
-            while (operatorTop >= 0 && operatorStack[operatorTop] != '(') {
-                float operand2 = operandStack[operandTop--];
-                float operand1 = operandStack[operandTop--];
-                char currentOperator = operatorStack[operatorTop--];
-                operandStack[++operandTop] =
-                    performOperation(operand1, operand2, currentOperator);
-            }
-            
-            operatorTop--;
+                while (operatorTop >= 0 && operatorStack[operatorTop] != '(') {
+                    float operand2 = operandStack[operandTop--];
+                    float operand1 = operandStack[operandTop--];
+                    char currentOperator = operatorStack[operatorTop--];
+                    operandStack[++operandTop] = performOperation(operand1, operand2, currentOperator);
+                }
+                
+                operatorTop--;
             }
         }
 
@@ -116,8 +117,7 @@
             float operand2 = operandStack[operandTop--];
             float operand1 = operandStack[operandTop--];
             char currentOperator = operatorStack[operatorTop--];
-            operandStack[++operandTop] =
-                performOperation(operand1, operand2, currentOperator);
+            operandStack[++operandTop] = performOperation(operand1, operand2, currentOperator);
         }
 
         return operandStack[operandTop];
@@ -198,7 +198,7 @@ INSTR_VALUES : const_int{strcpy(type_VALUE,"int");push($1);}|const_float{strcpy(
 
 DEC_IDF : Idf {
     if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")!=0){
-        printf("\nERREUR SEMANTIQUE ::: LA VARIABLE %s EST DEJA DECLAREE ligne ::: %d, col ::: %d",$1,nblignes,col);
+        printf("\nERREUR SEMANTIQUE ::: LA VARIABLE %s EST DEJA DECLAREE ligne ::: %d, col ::: %d\n",$1,nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         UpdateTypeConst($1,Var_type,"non");
@@ -206,14 +206,14 @@ DEC_IDF : Idf {
 }
 |Idf AFF DEC_VALUES {
     if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")!=0){
-        printf("\nERREUR SEMANTIQUE ::: LA VARIABLE %s EST DEJA DECLAREE ::: ligne ::: %d, col ::: %d",$1,nblignes,col);
+        printf("\nERREUR SEMANTIQUE ::: LA VARIABLE %s EST DEJA DECLAREE ::: ligne ::: %d, col ::: %d\n",$1,nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         UpdateTypeConst($1,Var_type,"non");        
         if ((strcmp(Var_type, type_VALUE) == 0) || ((strcmp(Var_type, "float") == 0) && (strcmp(type_VALUE, "int") == 0))){
             insertVALUE(num_VALUE);
         }else{
-            printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d\n",$1,type_VALUE,Var_type,nblignes);
+            printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",$1,type_VALUE,Var_type,nblignes,col);
             exit(EXIT_FAILURE);
         }
     }
@@ -221,14 +221,14 @@ DEC_IDF : Idf {
 
 CONST_IDF: Idf AFF DEC_VALUES{
         if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")!=0){
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE ::: ligne %d",$1,nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE ::: ligne %d, col ::: %d\n",$1,nblignes,col);
         exit(EXIT_FAILURE);
     } else{
         UpdateTypeConst($1,Var_type,"oui");
         if ((strcmp(Var_type, type_VALUE) == 0) || ((strcmp(Var_type, "float") == 0) && (strcmp(type_VALUE, "int") == 0))){
             insertVALUE(num_VALUE);
         }else{
-            printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d\n",$1,type_VALUE,Var_type,nblignes);
+            printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",$1,type_VALUE,Var_type,nblignes,col);
             exit(EXIT_FAILURE);
         }
     }
@@ -257,23 +257,26 @@ Instruction : AFFECTATION PVG
 
 AFFECTATION: Idf DPAFF Expression{
     if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")==0){
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d",$1,nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d",$1,nblignes,col);
         exit(EXIT_FAILURE);
     }else if(isconst($1)){
-        printf("\nERREUR SEMANTIQUE ::: MODIFICATION DE CONSTANTE %s INTERDITE ::: ligne %d",$1,nblignes);
+        printf("\nERREUR SEMANTIQUE ::: MODIFICATION DE CONSTANTE %s INTERDITE ::: ligne %d, col ::: %d",$1,nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         if(strcmp(type_Calcul,"bool")==0){
-            updateIDFValue($1,mirrorString(pop()));
+            char* booleanAFF=mirrorString(pop());
+            printf("\n Expression : %s := %s\n",$1,booleanAFF);
+
+            updateIDFValue($1,booleanAFF);
         }
         else if(strcmp(type_Calcul,typeIDF($1))==0 || strcmp(typeIDF($1),"float")==0){
             strcpy(result,pop());
             char* ret = mirrorString(result);
-            printf("\n Expression : %s",ret);
+            printf("\n Expression : %s := %s\n",$1,ret);
             sprintf(ret,"%g",evaluate(ret));
             updateIDFValue($1,ret);
         }else{
-            printf("\nERREUR SEMANTIQUE ::: INCOMPATIBILTE DE TYPE -> VARIABLE: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d\n",$1,type_Calcul,typeIDF($1),nblignes);
+            printf("\nERREUR SEMANTIQUE ::: INCOMPATIBILTE DE TYPE -> VARIABLE: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",$1,type_Calcul,typeIDF($1),nblignes,col);
             exit(EXIT_FAILURE);
         }
     }
@@ -299,26 +302,27 @@ Expression : Expression OPP Expression {
     push(expression);
 }
 |Idf OPP Expression {
-
     if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", $1, nblignes,col);
         exit(EXIT_FAILURE);
     }else if (strcmp(getValue($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", $1, nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", $1, nblignes,col);
         exit(EXIT_FAILURE);
     }else{
 
         if (strcmp(typeIDF($1),"bool") == 0 || strcmp(type_Calcul,"bool") == 0) {
-            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
             exit(EXIT_FAILURE);
         }
         char* right = pop();
-        strcpy(sauvOpr, pop());
+        char* OPR = pop();
+
         strcpy(valeur,getValue($1));
         char* ret = mirrorString(valeur);
+        char* result = (char*)malloc((strlen(right) + strlen(valeur) + strlen(OPR) + 1) * sizeof(char));
 
         strcpy(result,right);
-        strcat(result,sauvOpr);
+        strcat(result,OPR);
 
         strcat(result,ret);
 
@@ -333,10 +337,10 @@ Expression : Expression OPP Expression {
 }
 |Idf {
     if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", $1, nblignes,col);
         exit(EXIT_FAILURE);
     }else if (strcmp(getValue($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", $1, nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", $1, nblignes,col);
         exit(EXIT_FAILURE);
     }else{
 
@@ -354,7 +358,7 @@ Expression : Expression OPP Expression {
     char* OPR = pop();
 
     if (strcmp(type_VALUE,"bool") == 0 || strcmp(type_Calcul,"bool") == 0) {
-        printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+        printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
         exit(EXIT_FAILURE);
     }
 
@@ -364,8 +368,10 @@ Expression : Expression OPP Expression {
         strcpy(type_Calcul,"float");
     }
 
-
     char* valeur = pop();
+    
+    char* result = (char*)malloc((strlen(right) + strlen(valeur) + strlen(OPR) + 1) * sizeof(char));
+
     char* ret = mirrorString(valeur);
 
     strcpy(result,right);
@@ -388,14 +394,14 @@ Expression : Expression OPP Expression {
 
 COMPAREOPERANDS : Idf{
     if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", $1, nblignes,col);
         exit(EXIT_FAILURE);
     }else if (strcmp(getValue($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", $1, nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", $1, nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         if (strcmp(typeIDF($1), "bool") == 0) {
-            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
             exit(EXIT_FAILURE);
         }
         strcpy(result,getValue($1));
@@ -405,7 +411,7 @@ COMPAREOPERANDS : Idf{
 }
 |INSTR_VALUES{
     if (strcmp(type_VALUE, "bool") == 0) {
-        printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+        printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
         exit(EXIT_FAILURE);
     }
     else{
@@ -429,10 +435,10 @@ COMPARE_EXPR: COMPAREOPERANDS OppCond COMPAREOPERANDS{
 
 AUTOOPERATION : Idf PLUS PLUS{
     if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", $1, nblignes,col);
         exit(EXIT_FAILURE);
     }else if (strcmp(getValue($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", $1, nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", $1, nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         char* valeur = getValue($1);
@@ -440,7 +446,7 @@ AUTOOPERATION : Idf PLUS PLUS{
         strcpy(result,valeur);
         strcat(result,"+");
         strcat(result,"1");
-        printf("\n%s\n",result);
+        printf("\n Expression : %s := %s\n",$1,result);
 
         sprintf(result,"%g",evaluate(result));
         updateIDFValue($1,result);
@@ -448,10 +454,10 @@ AUTOOPERATION : Idf PLUS PLUS{
 }
 |Idf SUB SUB{
     if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", $1, nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", $1, nblignes,col);
         exit(EXIT_FAILURE);
     }else if (strcmp(getValue($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", $1, nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", $1, nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         char* valeur = getValue($1);
@@ -459,7 +465,7 @@ AUTOOPERATION : Idf PLUS PLUS{
         strcpy(result,valeur);
         strcat(result,"-");
         strcat(result,"1");
-        printf("\n%s\n",result);
+        printf("\n Expression : %s := %s\n",$1,result);
         sprintf(result,"%.2f",evaluate(result));
         updateIDFValue($1,result);
     }
@@ -470,9 +476,23 @@ BOUCLE: FOR PARG AFFECTATION PVG COMPARAISON PVG Compteur PARD CrochetG Liste_in
 CONDITION: IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD ELSE CrochetG Liste_instructions CrochetD
 |IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD 
 
+
 COMPARAISON : Expression OppCond Expression{
-    printf("\nligne ::: %d",nblignes);
-    printStack();
+
+    char* OPR1 = pop();
+    OPR1 = mirrorString(OPR1);
+    float value1 = evaluate(OPR1);
+
+    char* OPR = pop();
+
+    char* OPR2 = pop();
+    OPR2 = mirrorString(OPR2);
+    float value2 = evaluate(OPR2);
+
+    char* result = (char*)malloc(sizeof(char));
+
+    sprintf(result,"%d",evaluateCondition(value1,OPR,value2));
+    
 }
 
 Compteur : AFFECTATION
@@ -500,7 +520,7 @@ int main(int argc, char *argv[]) {
 }
 
 void yyerror() {
-    printf("\n\nSYNTAX ERROR at line ::: %d",nblignes);
+    printf("\n\nSYNTAX ERROR at line ::: %d, col ::: %d",nblignes,col);
     exit(EXIT_FAILURE);
 }
 

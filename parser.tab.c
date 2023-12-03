@@ -89,6 +89,7 @@
     char valeur[200];
     char result[1000];
     char cond[1];
+    char compexpr[10];
 
     char* mirrorString(const char* str) {
         int length = strlen(str);
@@ -134,6 +135,7 @@
         }
     }
 
+   
     float evaluate(char *expression) {
         int len = strlen(expression);
 
@@ -143,43 +145,42 @@
         int operatorTop = -1;
 
         for (int i = 0; i < len; i++) {
-            if (isNumeric(expression[i])) {
-
-            float operand = atof(&expression[i]);
-            while (i < len && isNumeric(expression[i])) {
-                i++;
-            }
-            i--; 
-            operandStack[++operandTop] = operand;
+            if (expression[i] == '-' && (i == 0 || !isNumeric(expression[i - 1]))) {
+                float operand = -atof(&expression[++i]); 
+                operandStack[++operandTop] = operand;
+            } else if (isNumeric(expression[i])) {
+                float operand = atof(&expression[i]);
+                while (i < len && (isNumeric(expression[i]) || expression[i] == '.')) {
+                    i++;
+                }
+                i--; 
+                operandStack[++operandTop] = operand;
             } else if (isOperator(expression[i])) {
-            
-            while (operatorTop >= 0 &&
+                while (operatorTop >= 0 &&
                     (operatorStack[operatorTop] == '+' ||
-                    operatorStack[operatorTop] == '-' ||
-                    operatorStack[operatorTop] == '*' ||
-                    operatorStack[operatorTop] == '/') &&
+                        operatorStack[operatorTop] == '-' ||
+                        operatorStack[operatorTop] == '*' ||
+                        operatorStack[operatorTop] == '/') &&
                     (expression[i] == '+' || expression[i] == '-')) {
-                
-                float operand2 = operandStack[operandTop--];
-                float operand1 = operandStack[operandTop--];
-                char currentOperator = operatorStack[operatorTop--];
-                operandStack[++operandTop] =
-                    performOperation(operand1, operand2, currentOperator);
-            }
+                    
+                    float operand2 = operandStack[operandTop--];
+                    float operand1 = operandStack[operandTop--];
+                    char currentOperator = operatorStack[operatorTop--];
+                    operandStack[++operandTop] = performOperation(operand1, operand2, currentOperator);
+                }
 
-            operatorStack[++operatorTop] = expression[i];
+                operatorStack[++operatorTop] = expression[i];
             } else if (expression[i] == '(') {
-            operatorStack[++operatorTop] = expression[i];
+                operatorStack[++operatorTop] = expression[i];
             } else if (expression[i] == ')') {
-            while (operatorTop >= 0 && operatorStack[operatorTop] != '(') {
-                float operand2 = operandStack[operandTop--];
-                float operand1 = operandStack[operandTop--];
-                char currentOperator = operatorStack[operatorTop--];
-                operandStack[++operandTop] =
-                    performOperation(operand1, operand2, currentOperator);
-            }
-            
-            operatorTop--;
+                while (operatorTop >= 0 && operatorStack[operatorTop] != '(') {
+                    float operand2 = operandStack[operandTop--];
+                    float operand1 = operandStack[operandTop--];
+                    char currentOperator = operatorStack[operatorTop--];
+                    operandStack[++operandTop] = performOperation(operand1, operand2, currentOperator);
+                }
+                
+                operatorTop--;
             }
         }
 
@@ -187,8 +188,7 @@
             float operand2 = operandStack[operandTop--];
             float operand1 = operandStack[operandTop--];
             char currentOperator = operatorStack[operatorTop--];
-            operandStack[++operandTop] =
-                performOperation(operand1, operand2, currentOperator);
+            operandStack[++operandTop] = performOperation(operand1, operand2, currentOperator);
         }
 
         return operandStack[operandTop];
@@ -621,8 +621,8 @@ static const yytype_uint16 yyrline[] =
      191,   192,   193,   195,   195,   195,   196,   196,   196,   197,
      197,   197,   199,   207,   222,   237,   238,   240,   241,   243,
      244,   246,   247,   249,   250,   252,   253,   254,   255,   256,
-     258,   282,   291,   301,   334,   351,   377,   386,   387,   389,
-     406,   422,   430,   449,   468,   470,   471,   473,   478,   479
+     258,   285,   294,   304,   338,   355,   383,   392,   393,   395,
+     412,   428,   436,   455,   474,   476,   477,   480,   498,   499
 };
 #endif
 
@@ -1746,7 +1746,7 @@ yyreduce:
 #line 199 "parser.y"
     {
     if (rechercher((yyvsp[(1) - (1)].string))!=-1 && strcmp(typeIDF((yyvsp[(1) - (1)].string)),"/")!=0){
-        printf("\nERREUR SEMANTIQUE ::: LA VARIABLE %s EST DEJA DECLAREE ligne ::: %d, col ::: %d",(yyvsp[(1) - (1)].string),nblignes,col);
+        printf("\nERREUR SEMANTIQUE ::: LA VARIABLE %s EST DEJA DECLAREE ligne ::: %d, col ::: %d\n",(yyvsp[(1) - (1)].string),nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         UpdateTypeConst((yyvsp[(1) - (1)].string),Var_type,"non");
@@ -1760,14 +1760,14 @@ yyreduce:
 #line 207 "parser.y"
     {
     if (rechercher((yyvsp[(1) - (3)].string))!=-1 && strcmp(typeIDF((yyvsp[(1) - (3)].string)),"/")!=0){
-        printf("\nERREUR SEMANTIQUE ::: LA VARIABLE %s EST DEJA DECLAREE ::: ligne ::: %d, col ::: %d",(yyvsp[(1) - (3)].string),nblignes,col);
+        printf("\nERREUR SEMANTIQUE ::: LA VARIABLE %s EST DEJA DECLAREE ::: ligne ::: %d, col ::: %d\n",(yyvsp[(1) - (3)].string),nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         UpdateTypeConst((yyvsp[(1) - (3)].string),Var_type,"non");        
         if ((strcmp(Var_type, type_VALUE) == 0) || ((strcmp(Var_type, "float") == 0) && (strcmp(type_VALUE, "int") == 0))){
             insertVALUE(num_VALUE);
         }else{
-            printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d\n",(yyvsp[(1) - (3)].string),type_VALUE,Var_type,nblignes);
+            printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",(yyvsp[(1) - (3)].string),type_VALUE,Var_type,nblignes,col);
             exit(EXIT_FAILURE);
         }
     }
@@ -1780,14 +1780,14 @@ yyreduce:
 #line 222 "parser.y"
     {
         if (rechercher((yyvsp[(1) - (3)].string))!=-1 && strcmp(typeIDF((yyvsp[(1) - (3)].string)),"/")!=0){
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE ::: ligne %d",(yyvsp[(1) - (3)].string),nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s EST DEJA DECLAREE ::: ligne %d, col ::: %d\n",(yyvsp[(1) - (3)].string),nblignes,col);
         exit(EXIT_FAILURE);
     } else{
         UpdateTypeConst((yyvsp[(1) - (3)].string),Var_type,"oui");
         if ((strcmp(Var_type, type_VALUE) == 0) || ((strcmp(Var_type, "float") == 0) && (strcmp(type_VALUE, "int") == 0))){
             insertVALUE(num_VALUE);
         }else{
-            printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d\n",(yyvsp[(1) - (3)].string),type_VALUE,Var_type,nblignes);
+            printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",(yyvsp[(1) - (3)].string),type_VALUE,Var_type,nblignes,col);
             exit(EXIT_FAILURE);
         }
     }
@@ -1800,23 +1800,26 @@ yyreduce:
 #line 258 "parser.y"
     {
     if (rechercher((yyvsp[(1) - (3)].string))!=-1 && strcmp(typeIDF((yyvsp[(1) - (3)].string)),"/")==0){
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d",(yyvsp[(1) - (3)].string),nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d",(yyvsp[(1) - (3)].string),nblignes,col);
         exit(EXIT_FAILURE);
     }else if(isconst((yyvsp[(1) - (3)].string))){
-        printf("\nERREUR SEMANTIQUE ::: MODIFICATION DE CONSTANTE %s INTERDITE ::: ligne %d",(yyvsp[(1) - (3)].string),nblignes);
+        printf("\nERREUR SEMANTIQUE ::: MODIFICATION DE CONSTANTE %s INTERDITE ::: ligne %d, col ::: %d",(yyvsp[(1) - (3)].string),nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         if(strcmp(type_Calcul,"bool")==0){
-            updateIDFValue((yyvsp[(1) - (3)].string),mirrorString(pop()));
+            char* booleanAFF=mirrorString(pop());
+            printf("\n Expression : %s := %s\n",(yyvsp[(1) - (3)].string),booleanAFF);
+
+            updateIDFValue((yyvsp[(1) - (3)].string),booleanAFF);
         }
         else if(strcmp(type_Calcul,typeIDF((yyvsp[(1) - (3)].string)))==0 || strcmp(typeIDF((yyvsp[(1) - (3)].string)),"float")==0){
             strcpy(result,pop());
             char* ret = mirrorString(result);
-            printf("\n Expression : %s",ret);
+            printf("\n Expression : %s := %s\n",(yyvsp[(1) - (3)].string),ret);
             sprintf(ret,"%g",evaluate(ret));
             updateIDFValue((yyvsp[(1) - (3)].string),ret);
         }else{
-            printf("\nERREUR SEMANTIQUE ::: INCOMPATIBILTE DE TYPE -> VARIABLE: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d\n",(yyvsp[(1) - (3)].string),type_Calcul,typeIDF((yyvsp[(1) - (3)].string)),nblignes);
+            printf("\nERREUR SEMANTIQUE ::: INCOMPATIBILTE DE TYPE -> VARIABLE: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",(yyvsp[(1) - (3)].string),type_Calcul,typeIDF((yyvsp[(1) - (3)].string)),nblignes,col);
             exit(EXIT_FAILURE);
         }
     }
@@ -1826,7 +1829,7 @@ yyreduce:
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 282 "parser.y"
+#line 285 "parser.y"
     {
     char* value = pop();
     char* result = (char*)malloc((strlen("(") + strlen(value) + strlen(")") + 1) * sizeof(char));
@@ -1840,7 +1843,7 @@ yyreduce:
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 291 "parser.y"
+#line 294 "parser.y"
     {
     char *right = pop();
     char *OPR = pop();
@@ -1856,28 +1859,29 @@ yyreduce:
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 301 "parser.y"
+#line 304 "parser.y"
     {
-
     if (rechercher((yyvsp[(1) - (3)].string)) != -1 && strcmp(typeIDF((yyvsp[(1) - (3)].string)), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", (yyvsp[(1) - (3)].string), nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", (yyvsp[(1) - (3)].string), nblignes,col);
         exit(EXIT_FAILURE);
     }else if (strcmp(getValue((yyvsp[(1) - (3)].string)), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", (yyvsp[(1) - (3)].string), nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", (yyvsp[(1) - (3)].string), nblignes,col);
         exit(EXIT_FAILURE);
     }else{
 
         if (strcmp(typeIDF((yyvsp[(1) - (3)].string)),"bool") == 0 || strcmp(type_Calcul,"bool") == 0) {
-            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
             exit(EXIT_FAILURE);
         }
         char* right = pop();
-        strcpy(sauvOpr, pop());
+        char* OPR = pop();
+
         strcpy(valeur,getValue((yyvsp[(1) - (3)].string)));
         char* ret = mirrorString(valeur);
+        char* result = (char*)malloc((strlen(right) + strlen(valeur) + strlen(OPR) + 1) * sizeof(char));
 
         strcpy(result,right);
-        strcat(result,sauvOpr);
+        strcat(result,OPR);
 
         strcat(result,ret);
 
@@ -1895,13 +1899,13 @@ yyreduce:
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 334 "parser.y"
+#line 338 "parser.y"
     {
     if (rechercher((yyvsp[(1) - (1)].string)) != -1 && strcmp(typeIDF((yyvsp[(1) - (1)].string)), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", (yyvsp[(1) - (1)].string), nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", (yyvsp[(1) - (1)].string), nblignes,col);
         exit(EXIT_FAILURE);
     }else if (strcmp(getValue((yyvsp[(1) - (1)].string)), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", (yyvsp[(1) - (1)].string), nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", (yyvsp[(1) - (1)].string), nblignes,col);
         exit(EXIT_FAILURE);
     }else{
 
@@ -1918,14 +1922,14 @@ yyreduce:
   case 45:
 
 /* Line 1455 of yacc.c  */
-#line 351 "parser.y"
+#line 355 "parser.y"
     {
 
     char* right = pop();
     char* OPR = pop();
 
     if (strcmp(type_VALUE,"bool") == 0 || strcmp(type_Calcul,"bool") == 0) {
-        printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+        printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
         exit(EXIT_FAILURE);
     }
 
@@ -1935,8 +1939,10 @@ yyreduce:
         strcpy(type_Calcul,"float");
     }
 
-
     char* valeur = pop();
+    
+    char* result = (char*)malloc((strlen(right) + strlen(valeur) + strlen(OPR) + 1) * sizeof(char));
+
     char* ret = mirrorString(valeur);
 
     strcpy(result,right);
@@ -1950,7 +1956,7 @@ yyreduce:
   case 46:
 
 /* Line 1455 of yacc.c  */
-#line 377 "parser.y"
+#line 383 "parser.y"
     {
     strcpy(type_Calcul,type_VALUE);
     strcpy(type_Expression,type_VALUE);
@@ -1965,17 +1971,17 @@ yyreduce:
   case 49:
 
 /* Line 1455 of yacc.c  */
-#line 389 "parser.y"
+#line 395 "parser.y"
     {
     if (rechercher((yyvsp[(1) - (1)].string)) != -1 && strcmp(typeIDF((yyvsp[(1) - (1)].string)), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", (yyvsp[(1) - (1)].string), nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", (yyvsp[(1) - (1)].string), nblignes,col);
         exit(EXIT_FAILURE);
     }else if (strcmp(getValue((yyvsp[(1) - (1)].string)), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", (yyvsp[(1) - (1)].string), nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", (yyvsp[(1) - (1)].string), nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         if (strcmp(typeIDF((yyvsp[(1) - (1)].string)), "bool") == 0) {
-            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
             exit(EXIT_FAILURE);
         }
         strcpy(result,getValue((yyvsp[(1) - (1)].string)));
@@ -1988,10 +1994,10 @@ yyreduce:
   case 50:
 
 /* Line 1455 of yacc.c  */
-#line 406 "parser.y"
+#line 412 "parser.y"
     {
     if (strcmp(type_VALUE, "bool") == 0) {
-        printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d\n", nblignes);
+        printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
         exit(EXIT_FAILURE);
     }
     else{
@@ -2009,7 +2015,7 @@ yyreduce:
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 422 "parser.y"
+#line 428 "parser.y"
     {
     int valeur = evaluateCondition(atof(pop()),pop(),atof(pop()));
     char* result = (char*)malloc(sizeof(char));
@@ -2022,13 +2028,13 @@ yyreduce:
   case 52:
 
 /* Line 1455 of yacc.c  */
-#line 430 "parser.y"
+#line 436 "parser.y"
     {
     if (rechercher((yyvsp[(1) - (3)].string)) != -1 && strcmp(typeIDF((yyvsp[(1) - (3)].string)), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", (yyvsp[(1) - (3)].string), nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", (yyvsp[(1) - (3)].string), nblignes,col);
         exit(EXIT_FAILURE);
     }else if (strcmp(getValue((yyvsp[(1) - (3)].string)), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", (yyvsp[(1) - (3)].string), nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", (yyvsp[(1) - (3)].string), nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         char* valeur = getValue((yyvsp[(1) - (3)].string));
@@ -2036,7 +2042,7 @@ yyreduce:
         strcpy(result,valeur);
         strcat(result,"+");
         strcat(result,"1");
-        printf("\n%s\n",result);
+        printf("\n Expression : %s := %s\n",(yyvsp[(1) - (3)].string),result);
 
         sprintf(result,"%g",evaluate(result));
         updateIDFValue((yyvsp[(1) - (3)].string),result);
@@ -2047,13 +2053,13 @@ yyreduce:
   case 53:
 
 /* Line 1455 of yacc.c  */
-#line 449 "parser.y"
+#line 455 "parser.y"
     {
     if (rechercher((yyvsp[(1) - (3)].string)) != -1 && strcmp(typeIDF((yyvsp[(1) - (3)].string)), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d", (yyvsp[(1) - (3)].string), nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", (yyvsp[(1) - (3)].string), nblignes,col);
         exit(EXIT_FAILURE);
     }else if (strcmp(getValue((yyvsp[(1) - (3)].string)), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d", (yyvsp[(1) - (3)].string), nblignes);
+        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", (yyvsp[(1) - (3)].string), nblignes,col);
         exit(EXIT_FAILURE);
     }else{
         char* valeur = getValue((yyvsp[(1) - (3)].string));
@@ -2061,7 +2067,7 @@ yyreduce:
         strcpy(result,valeur);
         strcat(result,"-");
         strcat(result,"1");
-        printf("\n%s\n",result);
+        printf("\n Expression : %s := %s\n",(yyvsp[(1) - (3)].string),result);
         sprintf(result,"%.2f",evaluate(result));
         updateIDFValue((yyvsp[(1) - (3)].string),result);
     }
@@ -2071,17 +2077,30 @@ yyreduce:
   case 57:
 
 /* Line 1455 of yacc.c  */
-#line 473 "parser.y"
+#line 480 "parser.y"
     {
-    printf("\nligne ::: %d",nblignes);
-    printStack();
+
+    char* OPR1 = pop();
+    OPR1 = mirrorString(OPR1);
+    float value1 = evaluate(OPR1);
+
+    char* OPR = pop();
+
+    char* OPR2 = pop();
+    OPR2 = mirrorString(OPR2);
+    float value2 = evaluate(OPR2);
+
+    char* result = (char*)malloc(sizeof(char));
+
+    sprintf(result,"%d",evaluateCondition(value1,OPR,value2));
+    
 ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 2085 "parser.tab.c"
+#line 2104 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2293,7 +2312,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 480 "parser.y"
+#line 500 "parser.y"
   
 
 int main(int argc, char *argv[]) {
@@ -2317,7 +2336,7 @@ int main(int argc, char *argv[]) {
 }
 
 void yyerror() {
-    printf("\n\nSYNTAX ERROR at line ::: %d",nblignes);
+    printf("\n\nSYNTAX ERROR at line ::: %d, col ::: %d",nblignes,col);
     exit(EXIT_FAILURE);
 }
 
