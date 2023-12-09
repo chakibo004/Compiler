@@ -11,12 +11,11 @@
     int col=1;
     char type_VALUE[200];
     char num_VALUE[200];
-    char sauvOpr[200];
     char type_Calcul[200];
     char valeur[200];
     char result[1000];
     
-    char* mirrorString(const char* str) {
+    char* mirrorString(const char* str) { // Fonction MIRROIR Pour inversion des chaines de la PILE
         int length = strlen(str);
         char* mirroredStr = (char*)malloc((length + 1) * sizeof(char));
         
@@ -70,9 +69,14 @@
 
         for (int i = 0; i < len; i++) {
             if (expression[i] == '-' && (i == 0 || !isNumeric(expression[i - 1]))) {
-                float operand = -atof(&expression[++i]); 
+                i++;
+                float operand = -atof(&expression[i]);
                 operandStack[++operandTop] = operand;
-            } else if (isNumeric(expression[i])) {
+                while (i < len && (isNumeric(expression[i]) || expression[i] == '.')) {
+                    i++;
+                }
+                i--;
+            }else if (isNumeric(expression[i])) {
                 float operand = atof(&expression[i]);
                 while (i < len && (isNumeric(expression[i]) || expression[i] == '.')) {
                     i++;
@@ -151,9 +155,9 @@
 %}
 
 %union {
-    int entier;
+    int entier; //
     char* string;
-    float reel;
+    float reel; //
 }
 
 %token AFF
@@ -166,11 +170,11 @@
 %token VIRGULE 
 %token <string> PLUS <string> SUB <string> MUL <string> DIV
 %token SUP SUPEGAL INF INFEGAL DIFF EGAL DPAFF IF ELSE
-%token FOR PARG PARD CrochetG CrochetD Commentaire
+%token FOR PARG PARD CrochetG CrochetD Commentaire WHILE DO
 
 
-%left MUL DIV
-%left SUB PLUS
+%left MUL DIV //
+%left SUB PLUS //
 %start program
 
 %%
@@ -211,7 +215,7 @@ DEC_IDF : Idf {
     }else{
         UpdateTypeConst($1,Var_type,"non");        
         if ((strcmp(Var_type, type_VALUE) == 0) || ((strcmp(Var_type, "float") == 0) && (strcmp(type_VALUE, "int") == 0))){
-            insertVALUE(num_VALUE);
+            updateIDFValue($1,num_VALUE);
         }else{
             printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",$1,type_VALUE,Var_type,nblignes,col);
             exit(EXIT_FAILURE);
@@ -226,7 +230,7 @@ CONST_IDF: Idf AFF DEC_VALUES{
     } else{
         UpdateTypeConst($1,Var_type,"oui");
         if ((strcmp(Var_type, type_VALUE) == 0) || ((strcmp(Var_type, "float") == 0) && (strcmp(type_VALUE, "int") == 0))){
-            insertVALUE(num_VALUE);
+            updateIDFValue($1,num_VALUE);
         }else{
             printf("\nERREUR SEMANTIQUE ::: Type incompatible pour la variable: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",$1,type_VALUE,Var_type,nblignes,col);
             exit(EXIT_FAILURE);
@@ -245,6 +249,8 @@ DEC_VAR: DEC_IDF VIRGULE DEC_VAR
 
 DEC_CONST: CONST_IDF VIRGULE DEC_CONST
 |CONST_IDF
+
+/* PARTIE INSTRUCTIONS */
 
 Liste_instructions : Instruction Liste_instructions
 |Instruction
@@ -282,15 +288,13 @@ AFFECTATION: Idf DPAFF Expression{
 
             printf("\n Expression : %s := %s => %s = %g\n",$1,ret,$1,value);
 
-            if(strcmp(typeIDF($1),type_value)==0){
+            if(strcmp(typeIDF($1),type_value)==0 || (strcmp(typeIDF($1),"float")==0 && strcmp(type_value,"int")==0)){
                 sprintf(ret,"%g",value);
                 updateIDFValue($1,ret);
             }else{
                 printf("\nERREUR SEMANTIQUE ::: INCOMPATIBILTE DE TYPE -> VARIABLE: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",$1,type_value,typeIDF($1),nblignes,col);
                 exit(EXIT_FAILURE);
             }
-
-
         }
     }
 }
@@ -552,9 +556,12 @@ AUTOOPERATION : Idf PLUS PLUS{
 }
 
 BOUCLE: FOR PARG AFFECTATION PVG COMPARAISON PVG Compteur PARD CrochetG Liste_instructions CrochetD
+|WHILE PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD
+|DO CrochetG Liste_instructions CrochetD WHILE PARG COMPARAISON PARD
 
 CONDITION: IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD ELSE CrochetG Liste_instructions CrochetD
 |IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD 
+|IF PARG COMPARAISON PARD CrochetG Liste_instructions CrochetD ELSE CONDITION
 
 
 COMPARAISON : Expression OppCond Expression{
@@ -570,13 +577,19 @@ COMPARAISON : Expression OppCond Expression{
     float value2 = evaluate(OPR2);
 
     char* result = (char*)malloc(sizeof(char));
-
-    sprintf(result,"%d",evaluateCondition(value1,OPR,value2));
+    int valeur = evaluateCondition(value2,OPR,value1);
+    if(valeur==1){
+        printf("\n Condition verifiee ::: line %d\n",nblignes);
+    }else{
+        printf("\n Condition non verifiee ::: line %d\n",nblignes);
+    }
+    sprintf(result,"%d",valeur);
     
 }
 
 Compteur : AFFECTATION
 |AUTOOPERATION
+
 %%  
 
 int main(int argc, char *argv[]) {

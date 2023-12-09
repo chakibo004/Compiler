@@ -9,20 +9,18 @@
     extern int col;
 %}
 
-%option yylineno
-commentrIMBR "/*"
-commentintr [^commentrIMBR]    
-Commentaire "/*"{commentintr}"*/"
+%option yylineno 
+Commentaire "/*"[^/*]*"*/"
 const_bool  "true"|"false"|"vrai"|"faux"
 chiffre [0-9]
-idf [A-Z]|([A-Z](_[a-zA-Z]|_[0-9]|[a-zA-Z0-9]){0,9})
-const_int [+-]?{chiffre}+
-const_float [+-]?({chiffre}+)"."({chiffre}+)
+idf [A-Z]|([A-Z](_[a-zA-Z]|_[0-9]|[a-zA-Z0-9])*)
+const_int [-]?{chiffre}+
+const_float [-]?({chiffre}+)"."({chiffre}+)
 const_char '[a-zA-Z]'
 const_string \"[0-9a-zA-Z ]+\"
 
 %%
-"CHAR"|"char" {col+=yyleng; yylval.string="char";return CHAR;}
+"CHAR"|"char" {col+=yyleng;yylval.string="char";return CHAR;}
 "STRING"|"string" {col+=yyleng; yylval.string="string";return STRING;}
 "INT"|"int" {col+=yyleng; yylval.string="int";return INT;}
 "FLOAT"|"float" {col+=yyleng;yylval.string="float";return FLOAT;}
@@ -31,6 +29,8 @@ const_string \"[0-9a-zA-Z ]+\"
 "BEGIN" {col+=yyleng; return BEG;}
 "END" {col+=yyleng;return END;}
 "For" {col+=yyleng; return FOR;}
+"While" {col+=yyleng; return WHILE;}
+"Do" {col+=yyleng; return DO;}
 "If" {col+=yyleng;return IF;}
 "else" {col+=yyleng; return ELSE;}
 
@@ -47,7 +47,7 @@ const_string \"[0-9a-zA-Z ]+\"
 
 {idf} {
     if(yyleng>10){
-        LXerror("\nUNRECOGNIZED IDF TOO MUCH LONG",yytext,nblignes,col);
+        LXerror("\nUNRECOGNIZED IDF : TOO MUCH LONG\n",yytext,nblignes,col);
     }
     col+=yyleng;
     yylval.string=strdup(yytext);

@@ -74,7 +74,9 @@
      PARD = 290,
      CrochetG = 291,
      CrochetD = 292,
-     Commentaire = 293
+     Commentaire = 293,
+     WHILE = 294,
+     DO = 295
    };
 #endif
 
@@ -85,16 +87,16 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 153 "parser.y"
+#line 157 "parser.y"
 
-    int entier;
+    int entier; //
     char* string;
-    float reel;
+    float reel; //
 
 
 
 /* Line 1676 of yacc.c  */
-#line 98 "parser.tab.h"
+#line 100 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

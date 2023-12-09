@@ -7,7 +7,7 @@ typedef struct{
 }TypeTS;
 
 TypeTS TS[1000];
-int cptTS=0;
+int cptTS=0; // Compteur de la TS
 
 
 #define STACK_SIZE 100
@@ -15,7 +15,7 @@ int cptTS=0;
 #define STRING_SIZE 50
 
 char* stack[STACK_SIZE];
-int top = 0;
+int top = 0; // top de la PILE
 
 int isEmpty(){
     return (top == 0);
@@ -103,13 +103,6 @@ char *typeIDF(char entite[]){
   	return "";
 }
 
-void insertVALUE(char value[]) {
-    if (cptTS > 0){
-        int index = cptTS -1;
-        strcpy(TS[index].Value, value);
-    }
-}
-
 void updateIDFValue(char entite[],char value[]){
     if (cptTS > 0){
         int index = rechercher(entite);
@@ -124,7 +117,6 @@ void UpdateTypeConst(char entite[],char type[],char isconstant[]){
         strcpy(TS[index].isConstant,isconstant);  
     }
 }
-
 
 void afficher(){
 

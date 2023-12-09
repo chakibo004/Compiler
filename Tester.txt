@@ -1,4 +1,5 @@
-int A,X;
+int A;
+float XXXXXXXXX;
 FLOAT K,L,O;
 const bool Ma = true;
 char Maa = 'e';
@@ -11,22 +12,24 @@ int C;
 int I = 1;
 int H;
 int Y = 548;
+float X;
 BEGIN
-Verifh := false;
-Str := "e" + Str2;
-A := B;
+Str := "Hello" + Str2;
+A := 0.2* -2.2 - 0.56;
 C := 4 + 5 + 3;
 I++;
-X := 9 - 5.5 * 4 * A / 1 + (1<2) - (2>3);
-H := 1 + (1<2) - (2>3);
+X := 9 - 5.5 * 4 * A / 1 + (1<2) - (2>3) + 5- 8 / 42 - 100 + 9 - 5.5 * 4 * A / 1 + (1<2) - (2>3);
+H := 1 + (1<2) - (2<>3);
 
 For(I:=1;I + 1<>5 + 8 + X;I++){
 
-    For(I:=7;I + 5<101;I++){
+    For(I:=70;I + 5>101;I++){
         C := 4 + 5 + 3;
     }
 
     If(I == H + Y){
+        C := 4 + 5 + 3;
+    }else If(I == H - Y){
         C := 4 + 5 + 3;
     }else{
         C := 4 + 5 + 3;
@@ -37,9 +40,16 @@ For(I:=1;I + 1<>5 + 8 + X;I++){
     C := 4 + 5 + 3;
 }
 
-/*G*/
-    For(I:=0;I<5;I:=I + 3){
-        C := 4 + 5 + 3;
+    While(I>5){
+        C:= 5;
     }
+
+    Do{
+        C:= 8;
+    }While(I>2)
+
+
+/*gk*/
+
 END
 
