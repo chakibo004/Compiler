@@ -12,14 +12,10 @@
     char type_VALUE[200];
     char num_VALUE[200];
     char sauvOpr[200];
-    char VARAFF[200];
     char type_Calcul[200];
-    char type_Expression[200];
     char valeur[200];
     char result[1000];
-    char cond[1];
-    char compexpr[10];
-
+    
     char* mirrorString(const char* str) {
         int length = strlen(str);
         char* mirroredStr = (char*)malloc((length + 1) * sizeof(char));
@@ -64,8 +60,7 @@
         }
     }
 
-   
-    float evaluate(char *expression) {
+    float evaluate(char *expression){
         int len = strlen(expression);
 
         float operandStack[len];
@@ -119,12 +114,11 @@
             char currentOperator = operatorStack[operatorTop--];
             operandStack[++operandTop] = performOperation(operand1, operand2, currentOperator);
         }
-
         return operandStack[operandTop];
     }
 
 
-    int evaluateCondition(float operand1, char* condition, float operand2 ) {
+    int evaluateCondition(float operand1, char* condition, float operand2 ){
         int result;
         if (strcmp(condition,"==")==0) {
             result = operand1 == operand2;
@@ -145,6 +139,14 @@
         }
         return result;
     }
+
+    char* getCalculType(float nombre) {
+        if (nombre == (int)nombre) {
+            return "int";
+        } else {
+            return "float";
+        }
+    }
     
 %}
 
@@ -156,13 +158,11 @@
 
 %token AFF
 %token PVG
-%token <string> INT
-%token <string> FLOAT
-%token <string> BOOL
+%token <string> INT <string> FLOAT <string> BOOL <string> CHAR <string> STRING
 %token BEG END 
 %token <string> CONST
 %token <string> Idf 
-%token <string> const_int <string> const_float <string> const_bool
+%token <string> const_int <string> const_float <string> const_bool <string> const_char <string> const_string
 %token VIRGULE 
 %token <string> PLUS <string> SUB <string> MUL <string> DIV
 %token SUP SUPEGAL INF INFEGAL DIFF EGAL DPAFF IF ELSE
@@ -192,9 +192,9 @@ OppCond : SUP{push(">");}
 |DIFF{push("<>");}
 |EGAL{push("==");}
 
-type  : FLOAT {strcpy(Var_type,$1);}|BOOL {strcpy(Var_type,$1);}|INT {strcpy(Var_type,$1);}
-DEC_VALUES : const_int{strcpy(type_VALUE,"int");strcpy(num_VALUE,$1);}|const_float{strcpy(type_VALUE,"float");strcpy(num_VALUE,$1);}|const_bool{strcpy(type_VALUE,"bool");strcpy(num_VALUE,$1);}
-INSTR_VALUES : const_int{strcpy(type_VALUE,"int");push($1);}|const_float{strcpy(type_VALUE,"float");push($1);}|const_bool{strcpy(type_VALUE,"bool");push($1);}
+type  : FLOAT {strcpy(Var_type,$1);}|BOOL {strcpy(Var_type,$1);}|INT {strcpy(Var_type,$1);}|CHAR {strcpy(Var_type,$1);}|STRING {strcpy(Var_type,$1);}
+DEC_VALUES : const_int{strcpy(type_VALUE,"int");strcpy(num_VALUE,$1);}|const_float{strcpy(type_VALUE,"float");strcpy(num_VALUE,$1);}|const_bool{strcpy(type_VALUE,"bool");strcpy(num_VALUE,$1);}|const_char{strcpy(type_VALUE,"char");strcpy(num_VALUE,$1);}|const_string{strcpy(type_VALUE,"string"); strcpy(num_VALUE,$1);}
+INSTR_VALUES : const_int{push("int");push($1);}|const_float{push("float");push($1);}|const_bool{push("bool");push($1);}|const_char{push("char");push($1);}|const_string{push("string"); push($1);}
 
 DEC_IDF : Idf {
     if (rechercher($1)!=-1 && strcmp(typeIDF($1),"/")!=0){
@@ -263,21 +263,34 @@ AFFECTATION: Idf DPAFF Expression{
         printf("\nERREUR SEMANTIQUE ::: MODIFICATION DE CONSTANTE %s INTERDITE ::: ligne %d, col ::: %d",$1,nblignes,col);
         exit(EXIT_FAILURE);
     }else{
-        if(strcmp(type_Calcul,"bool")==0){
-            char* booleanAFF=mirrorString(pop());
-            printf("\n Expression : %s := %s\n",$1,booleanAFF);
+        if(strcmp(type_Calcul,"bool")==0 || strcmp(type_Calcul,"char")==0 || strcmp(type_Calcul,"string")==0){
+            if(strcmp(typeIDF($1),type_Calcul)!=0){
+                printf("\nERREUR SEMANTIQUE ::: INCOMPATIBILTE DE TYPE -> VARIABLE: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",$1,type_Calcul,typeIDF($1),nblignes,col);
+                pop(); // Libérer la pile
+                exit(EXIT_FAILURE);
+            }else{
+                char* AFF = mirrorString(pop());
+                printf("\n Expression : %s := %s\n",$1,AFF);
 
-            updateIDFValue($1,booleanAFF);
-        }
-        else if(strcmp(type_Calcul,typeIDF($1))==0 || strcmp(typeIDF($1),"float")==0){
+                updateIDFValue($1,AFF);
+            }
+        }else{
             strcpy(result,pop());
             char* ret = mirrorString(result);
-            printf("\n Expression : %s := %s\n",$1,ret);
-            sprintf(ret,"%g",evaluate(ret));
-            updateIDFValue($1,ret);
-        }else{
-            printf("\nERREUR SEMANTIQUE ::: INCOMPATIBILTE DE TYPE -> VARIABLE: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",$1,type_Calcul,typeIDF($1),nblignes,col);
-            exit(EXIT_FAILURE);
+            float value = evaluate(ret);
+            char* type_value = getCalculType(value);
+
+            printf("\n Expression : %s := %s => %s = %g\n",$1,ret,$1,value);
+
+            if(strcmp(typeIDF($1),type_value)==0){
+                sprintf(ret,"%g",value);
+                updateIDFValue($1,ret);
+            }else{
+                printf("\nERREUR SEMANTIQUE ::: INCOMPATIBILTE DE TYPE -> VARIABLE: %s, TYPE affectee : %s, TYPE attendue : %s, ::: ligne %d, col ::: %d\n",$1,type_value,typeIDF($1),nblignes,col);
+                exit(EXIT_FAILURE);
+            }
+
+
         }
     }
 }
@@ -302,38 +315,66 @@ Expression : Expression OPP Expression {
     push(expression);
 }
 |Idf OPP Expression {
-    if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", $1, nblignes,col);
-        exit(EXIT_FAILURE);
-    }else if (strcmp(getValue($1), "/") == 0) {
-        printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", $1, nblignes,col);
-        exit(EXIT_FAILURE);
-    }else{
+    char* right = pop();
+    char* OPR = pop();
+    strcpy(valeur,getValue($1));
 
-        if (strcmp(typeIDF($1),"bool") == 0 || strcmp(type_Calcul,"bool") == 0) {
+        if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
+            printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'EST PAS DECLAREE ::: ligne %d, col ::: %d", $1, nblignes,col);
+            exit(EXIT_FAILURE);
+        }else if (strcmp(getValue($1), "/") == 0) {
+            printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", $1, nblignes,col);
+            exit(EXIT_FAILURE);
+        }else if (strcmp(typeIDF($1),"bool") == 0 || strcmp(type_Calcul,"bool") == 0){
             printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
             exit(EXIT_FAILURE);
-        }
-        char* right = pop();
-        char* OPR = pop();
+        }else if(strcmp(typeIDF($1),"char") == 0 || strcmp(type_Calcul,"char") == 0){
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES CARACTERES ::: ligne %d, col ::: %d\n", nblignes,col);
+            exit(EXIT_FAILURE);
+        }else if (strcmp(type_Calcul, "string") == 0 && strcmp(typeIDF($1), "string") == 0){
 
-        strcpy(valeur,getValue($1));
-        char* ret = mirrorString(valeur);
-        char* result = (char*)malloc((strlen(right) + strlen(valeur) + strlen(OPR) + 1) * sizeof(char));
+            if(strcmp(OPR,"+")!=0){
+                printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES CHAINES DE CARACTERES ::: ligne %d, col ::: %d\n", nblignes,col);
+                exit(EXIT_FAILURE);
+            }else{
+                //Faire La concaténation
 
-        strcpy(result,right);
-        strcat(result,OPR);
+                if (right[0] == '\"' && right[strlen(right) - 1] == '\"' && valeur[0] == '\"' && valeur[strlen(valeur) - 1] == '\"') {
+                        
+                    char NewStr1[100],NewStr2[100];
+                    strncpy(NewStr1, right + 1, strlen(right) - 2);
+                    strncpy(NewStr2, valeur + 1, strlen(valeur) - 2);
 
-        strcat(result,ret);
+                    NewStr1[strlen(right) - 2] = '\0';
+                    NewStr2[strlen(valeur) - 2] = '\0';
 
-        if(strcmp(typeIDF($1),type_Expression)==0){
-            strcpy(type_Calcul,type_Expression);
+                    char* result = (char*)malloc(( strlen(NewStr1) + strlen(NewStr2) + 1) * sizeof(char));
+                    char* ret = mirrorString(NewStr2);
+                    
+                    strcpy(result,"\"");
+                    strcat(result,NewStr1);
+                    strcat(result,ret);
+                    strcat(result,"\"");
+
+                    push(result);
+                }
+            }
+        }else if((strcmp(typeIDF($1),"string") != 0 && strcmp(type_Calcul,"string")== 0) || (strcmp(typeIDF($1),"string") == 0 && strcmp(type_Calcul,"string")!= 0)){
+                printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES CHAINES DE CARACTERES ::: ligne %d, col ::: %d\n", nblignes,col);
+                exit(EXIT_FAILURE);
         }else{
-            strcpy(type_Calcul,"float");
-        }
 
-        push(result);
-    }
+
+            char* ret = mirrorString(valeur);
+            char* result = (char*)malloc((strlen(right) + strlen(valeur) + strlen(OPR) + 1) * sizeof(char));
+
+            strcpy(result,right);
+            strcat(result,OPR);
+
+            strcat(result,ret);
+
+            push(result);
+        }
 }
 |Idf {
     if (rechercher($1) != -1 && strcmp(typeIDF($1), "/") == 0) {
@@ -345,7 +386,6 @@ Expression : Expression OPP Expression {
     }else{
 
         strcpy(type_Calcul,typeIDF($1));
-        strcpy(type_Expression,typeIDF($1));
 
         strcpy(result,getValue($1));
         char* ret = mirrorString(result);
@@ -356,35 +396,67 @@ Expression : Expression OPP Expression {
 
     char* right = pop();
     char* OPR = pop();
+    char* valeur = pop();
+    char* type = pop();
 
-    if (strcmp(type_VALUE,"bool") == 0 || strcmp(type_Calcul,"bool") == 0) {
+
+    if (strcmp(type,"bool") == 0 || strcmp(type_Calcul,"bool") == 0){
         printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
         exit(EXIT_FAILURE);
-    }
+    }else if(strcmp(type,"char") == 0 || strcmp(type_Calcul,"char") == 0){
+        printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES CARACTERES ::: ligne %d, col ::: %d\n", nblignes,col);
+        exit(EXIT_FAILURE);
+    }else if (strcmp(type_Calcul, "string") == 0 && strcmp(type, "string") == 0){
 
-    if(strcmp(type_VALUE,type_Expression)==0){
-        strcpy(type_Calcul,type_Expression);
+        if(strcmp(OPR,"+")!=0){
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES CHAINES DE CARACTERES ::: ligne %d, col ::: %d\n", nblignes,col);
+            exit(EXIT_FAILURE);
+        }else{
+        //Faire La concaténation
+
+            if (right[0] == '\"' && right[strlen(right) - 1] == '\"' && valeur[0] == '\"' && valeur[strlen(valeur) - 1] == '\"') {
+                    
+                char NewStr1[100],NewStr2[100];
+                strncpy(NewStr1, right + 1, strlen(right) - 2);
+                strncpy(NewStr2, valeur + 1, strlen(valeur) - 2);
+
+                NewStr1[strlen(right) - 2] = '\0';
+                NewStr2[strlen(valeur) - 2] = '\0';
+
+                char* result = (char*)malloc(( strlen(NewStr1) + strlen(NewStr2) + 1) * sizeof(char));
+                char* ret = mirrorString(NewStr2);
+                
+                strcpy(result,"\"");
+                strcat(result,NewStr1);
+                strcat(result,ret);
+                strcat(result,"\"");
+
+                push(result);
+            }
+        }
+    }else if((strcmp(type,"string") != 0 && strcmp(type_Calcul,"string")== 0) || (strcmp(type,"string") == 0 && strcmp(type_Calcul,"string")!= 0)){
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES CHAINES DE CARACTERES ::: ligne %d, col ::: %d\n", nblignes,col);
+            exit(EXIT_FAILURE);
     }else{
-        strcpy(type_Calcul,"float");
+        char* result = (char*)malloc((strlen(right) + strlen(valeur) + strlen(OPR) + 1) * sizeof(char));
+
+        char* ret = mirrorString(valeur);
+
+        strcpy(result,right);
+        strcat(result,OPR);
+        strcat(result,ret);
+
+
+        push(result);
+
     }
-
-    char* valeur = pop();
-    
-    char* result = (char*)malloc((strlen(right) + strlen(valeur) + strlen(OPR) + 1) * sizeof(char));
-
-    char* ret = mirrorString(valeur);
-
-    strcpy(result,right);
-    strcat(result,OPR);
-    strcat(result,ret);
-    push(result);
-
 }
 |INSTR_VALUES{
-    strcpy(type_Calcul,type_VALUE);
-    strcpy(type_Expression,type_VALUE);
-
     strcpy(result,pop());
+
+    char* type = pop();
+    strcpy(type_Calcul,type);
+
     char* ret = mirrorString(result);
 
     push(ret);
@@ -400,25 +472,33 @@ COMPAREOPERANDS : Idf{
         printf("\nERREUR SEMANTIQUE LA VARIABLE %s N'A PAS DE VALEUR ASSIGNEE ::: ligne %d, col ::: %d", $1, nblignes,col);
         exit(EXIT_FAILURE);
     }else{
-        if (strcmp(typeIDF($1), "bool") == 0) {
+        if (strcmp(typeIDF($1),"bool") == 0){
             printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
             exit(EXIT_FAILURE);
+        }else if(strcmp(typeIDF($1),"char") == 0){
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES CARACTERES ::: ligne %d, col ::: %d\n", nblignes,col);
+            exit(EXIT_FAILURE);
+        }else if(strcmp(typeIDF($1),"string") == 0){
+            printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES CHAINES DE CARACTERES ::: ligne %d, col ::: %d\n", nblignes,col);
+            exit(EXIT_FAILURE);
         }
+
+
         strcpy(result,getValue($1));
         char* ret = mirrorString(result);
         push(ret);
     }
 }
 |INSTR_VALUES{
-    if (strcmp(type_VALUE, "bool") == 0) {
+    strcpy(result,pop());
+    char* type = pop();
+    if (strcmp(type, "bool") == 0) {
         printf("\nERREUR SEMANTIQUE ::: OPERATION IMPOSSIBLE SUR DES OPERANDES BOOLEEN ::: ligne %d, col ::: %d\n", nblignes,col);
         exit(EXIT_FAILURE);
     }
     else{
-        strcpy(type_Calcul,type_VALUE);
-        strcpy(type_Expression,type_VALUE);
+        strcpy(type_Calcul,type);
 
-        strcpy(result,pop());
         char* ret = mirrorString(result);
 
         push(ret);
@@ -537,4 +617,3 @@ void SNerror(char *error, char *msg,int line, int col) {
     }
     exit(EXIT_FAILURE);
 }
-

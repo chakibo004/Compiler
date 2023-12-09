@@ -39,14 +39,14 @@ char* pop() {
 }
 
 void printStack(){
-  if (top == -1) {
+  if (top == 0) {
     printf("La pile est vide.\n");
     return;
   }
 
   printf("\nLa pile contient : \n");
 
-  for (int i = top; i > 0; i--) {
+  for (int i = top-1 ; i >=0; i--) {
     printf("    cellule %d : %-20s\n", i, stack[i]);
   }
 }
@@ -132,15 +132,15 @@ void afficher(){
         printf("Table des symboles VIDE");
     }else{
         int i=0;
-            printf("\n===============================================================");
-            printf("\n| Nom Entite | Code Entite  | Type Entite | Constant | Valeur |");
-            printf("\n===============================================================");
+            printf("\n======================================================================");
+            printf("\n| Nom Entite | Code Entite  | Type Entite | Constant |    Valeur     |");
+            printf("\n======================================================================");
 
         while(i<cptTS){
-            printf("\n| %10s | %12s | %11s | %8s | %6s |",TS[i].NomEntite,TS[i].CodeEntite,TS[i].TypeEntite,TS[i].isConstant,TS[i].Value);
+            printf("\n| %10s | %12s | %11s | %8s | %13s |",TS[i].NomEntite,TS[i].CodeEntite,TS[i].TypeEntite,TS[i].isConstant,TS[i].Value);
             i++;
         }
-            printf("\n===============================================================");
+            printf("\n======================================================================");
 
     }
 }

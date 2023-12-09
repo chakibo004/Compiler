@@ -1,22 +1,26 @@
-float A,X;
+int A,X;
 FLOAT K,L,O;
 const bool Ma = true;
+char Maa = 'e';
+string Str = "Hello";
+const string Str2 = " World";
 const float W = 32;
 bool Verif = faux;
-int B = -5;
+float B = 5.0;
 int C;
-int I = 0;
+int I = 1;
 int H;
-int Y = 8;
+int Y = 548;
 BEGIN
-
-A := 3 + B;
+Verifh := false;
+Str := "e" + Str2;
+A := B;
 C := 4 + 5 + 3;
 I++;
-X := 9 - 5 * 4 * A / 1 + (1<2) - (2>3);
+X := 9 - 5.5 * 4 * A / 1 + (1<2) - (2>3);
 H := 1 + (1<2) - (2>3);
 
-For(I:=0;I + 1<>5 + 8 + X;I++){
+For(I:=1;I + 1<>5 + 8 + X;I++){
 
     For(I:=7;I + 5<101;I++){
         C := 4 + 5 + 3;
@@ -28,13 +32,14 @@ For(I:=0;I + 1<>5 + 8 + X;I++){
         C := 4 + 5 + 3;
     }
 
-    H := (1<2);
+    H := (1>2);
 
     C := 4 + 5 + 3;
 }
 
-{*G*}
+/*G*/
     For(I:=0;I<5;I:=I + 3){
         C := 4 + 5 + 3;
     }
 END
+

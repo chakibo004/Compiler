@@ -10,15 +10,20 @@
 %}
 
 %option yylineno
-commentintr [^-{}]*
-Commentaire "{*"{commentintr}"*}"
+commentrIMBR "/*"
+commentintr [^commentrIMBR]    
+Commentaire "/*"{commentintr}"*/"
 const_bool  "true"|"false"|"vrai"|"faux"
 chiffre [0-9]
 idf [A-Z]|([A-Z](_[a-zA-Z]|_[0-9]|[a-zA-Z0-9]){0,9})
 const_int [+-]?{chiffre}+
 const_float [+-]?({chiffre}+)"."({chiffre}+)
-%%
+const_char '[a-zA-Z]'
+const_string \"[0-9a-zA-Z ]+\"
 
+%%
+"CHAR"|"char" {col+=yyleng; yylval.string="char";return CHAR;}
+"STRING"|"string" {col+=yyleng; yylval.string="string";return STRING;}
 "INT"|"int" {col+=yyleng; yylval.string="int";return INT;}
 "FLOAT"|"float" {col+=yyleng;yylval.string="float";return FLOAT;}
 "BOOL"|"bool" {col+=yyleng;yylval.string="bool";return BOOL;}
@@ -54,6 +59,18 @@ const_float [+-]?({chiffre}+)"."({chiffre}+)
     yylval.string=strdup(yytext);
     col+=yyleng;
     return const_int;
+}
+
+{const_char} {
+    yylval.string=strdup(yytext);
+    col+=yyleng;
+    return const_char;
+}
+
+{const_string} {
+    yylval.string=strdup(yytext);
+    col+=yyleng;
+    return const_string;
 }
 
 {const_float} {
